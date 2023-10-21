@@ -1,0 +1,28 @@
+name: DP
+
+channels:
+  - defaults
+  - conda-forge
+
+dependencies:
+  - python=3.9.*
+  - pip=20.0.*
+  - numpy=1.19.*
+  - scipy=1.5.*
+  - matplotlib=3.3.*
+  - ipython=7.10.*
+  - jupyter=1.0.*
+  - pandas=1.1.*
+  - scikit-learn=0.23.*
+  - ffmpeg=4.2.*
+  - numba=0.56.*
+  - jupyter_contrib_nbextensions=0.5.*
+  - jupyter_client=6.1.*
+  - pip:
+    - mir-eval==0.5.*
+    - nbstripout==0.3.*
+    - music21==5.7.*
+    - pretty_midi==0.2.*
+    - librosa==0.8.*
+    - soundfile==0.9.*
+    - resampy==0.2.*
