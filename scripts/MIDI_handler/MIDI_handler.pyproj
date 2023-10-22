@@ -4,9 +4,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>20965d57-09fe-4c76-bcb1-278ee55cb743</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>MIDI_handler.py</StartupFile>
-    <SearchPath>
-    </SearchPath>
+    <StartupFile>DP\MIDI\MIDI_handler.py</StartupFile>
+    <SearchPath>..\..\scripts</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>MIDI_handler</Name>
@@ -22,11 +21,20 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="MIDI_handler.py" />
+    <Compile Include="DP\MIDI\sheet.py" />
+    <Compile Include="DP\MIDI\MIDI_handler.py" />
+    <Compile Include="DP\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="CondaEnv|CondaEnv|DP" />
     <InterpreterReference Include="CondaEnv|CondaEnv|FMP" />
+    <InterpreterReference Include="Global|VisualStudio|envs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="DP\" />
+    <Folder Include="DP\MIDI\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
