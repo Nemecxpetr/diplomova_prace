@@ -1,4 +1,5 @@
-﻿import os
+﻿from multiprocessing import Value
+import os
 import sys
 import numpy as np
 import pandas as pd
@@ -166,6 +167,116 @@ def visualize_piano_roll(score, xlabel='Time (seconds)', ylabel='Pitch', colors=
 
     return fig, ax
 
+def read_csv(fn, header=True, add_label=False):
+    """Read a CSV file in table format and creates a pd.DataFrame from it, with observations in the
+    rows and variables in the columns.
+
+
+    Args:
+        fn (str): Filename
+        header (bool): Boolean (Default value = True)
+        add_label (bool): Add column with constant value of `add_label` (Default value = False)
+
+    Returns:
+        df (pd.DataFrame): Pandas DataFrame
+    """
+    df = pd.read_csv(fn, sep=';', keep_default_na=False, header=0 if header else None)
+    if add_label:
+        assert 'label' not in df.columns, 'Label column must not exist if `add_label` is True'
+        df = df.assign(label=[add_label] * len(df.index))
+    return df
+
+def csv_to_list(csv):
+    """Convert a csv score file to a list of note events
+
+    Notebook: C1/C1S2_CSV.ipynb
+
+    Args:
+        csv (str or pd.DataFrame): Either a path to a csv file or a data frame
+
+    Returns:
+        score (list): A list of note events where each note is specified as
+            ``[start, duration, pitch, velocity, label]``
+    """
+
+    if isinstance(csv, str):
+        df = read_csv(csv)
+    elif isinstance(csv, pd.DataFrame):
+        df = csv
+    else:
+        raise RuntimeError('csv must be a path to a csv file or pd.DataFrame')
+
+    score = []
+    for i, (start, duration, pitch, velocity, label) in df.iterrows():
+        score.append([start, duration, pitch, velocity, label])
+    return score
+
+def csv_to_midi(csv, fn_out):
+    """Convert a csv to midi file
+
+    Args: 
+        csv (str or pd.DataFrame): Either a path to a csv file or a data frame
+        fn_out (str): The path of the midi file to be created (including ../name.mid)
+
+    Returns: 
+        midi_out (pretty_midi.PrettyMIDI()): a pretty midi object 
+    """
+
+    # First load the CSV file as data frame
+    if isinstance(csv, str):
+        df = pd.read_csv(csv, sep=';', keep_default_na=False)
+    elif isinstance(csv, pd.DataFrame):
+        df = csv
+    else:
+        raise RuntimeError('csv must be a path to a csv file or pd.DataFrame')
+
+    # Create a PrettyMIDI object
+    midi_out = pretty_midi.PrettyMIDI()
+
+    # Create a dictionary to keep track of instruments by name
+    instruments = {}
+
+    # Iterate over the rows of the DataFrame and add MIDI information to midi_out
+    for _, row in df.iterrows():
+        start_time = float(row['Start'])
+        duration = float(row['Duration'])
+        pitch = int(row['Pitch'])
+        velocity = int(row['Velocity']*128)
+        try:
+            instrument_name = row['Instrument']
+            instrument_id = pretty_midi.instrument_name_to_program(instrument_name)
+        except ValueError:
+            print('Not a valid instrument name - instrument set to piano')
+            instrument_id = 1
+
+        # Check if the instrument already exists
+        if instrument_name in instruments:
+            instrument = instruments[instrument_name]
+        else:
+            # Create a new Instrument object for the note
+            instrument = pretty_midi.Instrument(program=instrument_id)
+            instruments[instrument_name] = instrument
+
+        # Create a Note object with the extracted MIDI information
+        note = pretty_midi.Note(
+            velocity=velocity,
+            pitch=pitch,
+            start=start_time,
+            end=start_time + duration
+        )
+
+        # Add the note to the instrument
+        instrument.notes.append(note)
+
+    # Add the instruments to the PrettyMIDI object
+    for instrument in instruments.values():
+        midi_out.instruments.append(instrument)
+
+    # Write out the MIDI data
+    midi_out.write(fn_out)
+
+    return midi_out
+
 
 print('First lets check the loading of midi data: ')
 midi_data = load_midi()
@@ -175,8 +286,13 @@ print(tabulate(score, headers=['start', 'duration', 'pitch', 'velocity', 'instru
 print('')
 
 print('Now lets generate csv file from this list')
+print('')
 
-path = os.path.join('..', '..', 'data','CSV', 'test.csv')
-list_to_csv(score, path)
+path_csv = os.path.join('..', '..', 'data','CSV', 'test_4_4.csv')
+list_to_csv(score, path_csv)
 
 
+print('We can also create a midi back from the csv file - even though there are some problems and it won_t be the same')
+
+path_midi= os.path.join('..', '..', 'data', 'MIDI', 'test_new.mid')
+midi_data_from_csv = csv_to_midi(path_csv, path_midi)
