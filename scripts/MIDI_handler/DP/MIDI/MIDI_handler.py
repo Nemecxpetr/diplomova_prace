@@ -1,4 +1,8 @@
-﻿from multiprocessing import Value
+﻿"""
+Some functions are inspired by or taken from libfmp and FMP notebooks by Meinerd Mueller
+
+"""
+
 import os
 import sys
 import numpy as np
@@ -321,4 +325,6 @@ def test_drums():
     fig, ax = visualize_piano_roll(midi_to_list(midi_data_from_csv), velocity_alpha=True)
     plt.show()
 
-test_drums()
+#TODO: def xml_to_list xml_to_audio, sonification,...
+
+test_drums() # TODO: add check for drums to load_midi and all other functions accordingly
