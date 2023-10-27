@@ -1,4 +1,3 @@
-# Diplomová práce
 # Score-to-audio synchronization of music interpretations
 Diplomová práce na téma synchronizace symbolického zápisu s hudebními interpretacemi odpovídající skladby.
 
@@ -13,3 +12,5 @@ Na závěr vyhodnocení limitace použitých metod a přesnost výsledné synchr
 
 Cílem **semestrálního projektu** je popis principů hudební synchronizace, sestavení datasetu a základní implementace score-to-audio synchronizace. 
 V budoucí diplomové práci budou implementovány skripty pro každou část synchronizačního procesu včetně výsledného testování přesnosti použitých metod a výsledek bude demonstrován na praktických ukázkách.
+
+
