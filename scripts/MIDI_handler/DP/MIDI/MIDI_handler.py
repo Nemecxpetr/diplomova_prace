@@ -57,7 +57,7 @@ def color_argument_to_dict(colors, labels_set, default='gray'):
 
     return color_dict
 
-def load_midi(fn=os.path.join('..', '..', 'data', 'MIDI', 'test.mid')):
+def load_midi(fn=os.path.join('..', '..', 'data', 'MIDI', 'test_flute.mid')):
     """Load midi file into the midi_data var
         Args:
             fn (os.path): path to the file to be loaded
@@ -277,22 +277,48 @@ def csv_to_midi(csv, fn_out):
 
     return midi_out
 
+def test():
+    print('First lets check the loading of midi data: ')
+    midi_data = load_midi()
+    score = midi_to_list(midi_data)
 
-print('First lets check the loading of midi data: ')
-midi_data = load_midi()
-score = midi_to_list(midi_data)
+    print(tabulate(score, headers=['start', 'duration', 'pitch', 'velocity', 'instrument name']))
+    print('')
 
-print(tabulate(score, headers=['start', 'duration', 'pitch', 'velocity', 'instrument name']))
-print('')
+    print('Now lets generate csv file from this list')
+    print('')
 
-print('Now lets generate csv file from this list')
-print('')
-
-path_csv = os.path.join('..', '..', 'data','CSV', 'test_4_4.csv')
-list_to_csv(score, path_csv)
+    path_csv = os.path.join('..', '..', 'data','CSV', 'test_flute.csv')
+    list_to_csv(score, path_csv)
 
 
-print('We can also create a midi back from the csv file - even though there are some problems and it won_t be the same')
+    print('We can also create a midi back from the csv file - even though there are some problems and it won_t be the same')
 
-path_midi= os.path.join('..', '..', 'data', 'MIDI', 'test_new.mid')
-midi_data_from_csv = csv_to_midi(path_csv, path_midi)
+    path_midi= os.path.join('..', '..', 'data', 'MIDI', 'test_new.mid')
+    midi_data_from_csv = csv_to_midi(path_csv, path_midi)
+
+    # using the variable ax for single a Axes
+
+    fig, ax = visualize_piano_roll(midi_to_list(midi_data_from_csv), velocity_alpha=True)
+    plt.show()
+
+def test_drums():
+    path_drums = os.path.join('..', '..', 'data', 'MIDI', 'test_with_drums.mid')
+    midi_data = load_midi(path_drums)    
+
+    score = midi_to_list(midi_data)
+
+    path_csv = os.path.join('..', '..', 'data','CSV', 'test_with_drums.csv')
+    list_to_csv(score, path_csv)
+    
+    fig, ax = visualize_piano_roll(score, velocity_alpha=True)
+
+    path_midi= os.path.join('..', '..', 'data', 'MIDI', 'test_drums_new.mid')
+    midi_data_from_csv = csv_to_midi(path_csv, path_midi)
+
+    # using the variable ax for single a Axes
+
+    fig, ax = visualize_piano_roll(midi_to_list(midi_data_from_csv), velocity_alpha=True)
+    plt.show()
+
+test_drums()
