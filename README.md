@@ -10,7 +10,10 @@ Prozkoumat možnosti hudební synchronizace symbolického zápisu hudby s reáln
 
 Na závěr vyhodnocení limitace použitých metod a přesnost výsledné synchronizace. 
 
-Cílem **semestrálního projektu** je popis principů hudební synchronizace, sestavení datasetu a základní implementace score-to-audio synchronizace. 
+Cílem **semestrálního projektu** je:
+- popis principů hudební synchronizace,
+-  sestavení datasetu a základní implementace score-to-audio synchronizace.
+ 
 V budoucí diplomové práci budou implementovány skripty pro každou část synchronizačního procesu včetně výsledného testování přesnosti použitých metod a výsledek bude demonstrován na praktických ukázkách.
 
 
