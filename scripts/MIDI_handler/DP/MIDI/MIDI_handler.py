@@ -325,6 +325,8 @@ def test_drums():
     fig, ax = visualize_piano_roll(midi_to_list(midi_data_from_csv), velocity_alpha=True)
     plt.show()
 
-#TODO: def xml_to_list xml_to_audio, sonification,...
+# TODO: def xml_to_list xml_to_audio, sonification,...
+
+# TODO: add/fix tempo information to load_midi and other functions accordingly
 
 test_drums() # TODO: add check for drums to load_midi and all other functions accordingly
