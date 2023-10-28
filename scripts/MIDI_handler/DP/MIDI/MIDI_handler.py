@@ -93,16 +93,19 @@ def midi_to_list(midi):
     else:
         raise RuntimeError('midi must be a path to a midi file or pretty_midi.PrettyMIDI')
     
-    # get tempo throughout the whole piece
+    # TODO: adjust the start and duration times even if there are tempo changes
     tempo_change, tempo = midi_data.get_tempo_changes()
     
     score = []
         
     for instrument in midi_data.instruments:
         for note in instrument.notes:
-            # TODO: change start and end times so that it is in default 120 bpm tempo with all tempo changes
-            start = note.start*(tempo[0]/120)
-            duration = -start+note.end*(tempo[0]/120)
+            t = tempo[0] # get the tempo from the tempo list by getting the index of current tempo change index
+                
+            start = note.start*(t/120)
+            duration = -start+note.end*(t/120)
+                
+
             pitch = note.pitch
             velocity = note.velocity / 128.
             score.append([start, duration, pitch, velocity, instrument.name])
