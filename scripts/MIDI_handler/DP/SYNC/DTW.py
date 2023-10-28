@@ -1,4 +1,12 @@
-import MIDI 
+"""
+Module: DTW
+Author: Petr Nìmec
+
+Part of my master's thesis (https://github.com/Nemecxpetr/diplomova_prace)
+"""
+
+import Handler as H
 
 # load midi using MIDI_handler
-MIDI.load_midi()
+H.load_midi()
+

@@ -1,6 +1,9 @@
 ﻿"""
-Some functions are inspired by or taken from libfmp and FMP notebooks by Meinerd Mueller
+Module: MIDI_handler
+Author: Petr Němec
+License: 
 
+Some functions were taken from or inspired by the FMP Notebooks (https://www.audiolabs-erlangen.de/FMP)
 """
 
 import os
@@ -353,12 +356,5 @@ def test_tempo():
     fig, ax = visualize_piano_roll(midi_to_list(md), velocity_alpha=True)
     fig, ax = visualize_piano_roll(midi_to_list(new_midi), velocity_alpha=True)
     plt.show()
-
-   
-# TODO: def xml_to_list xml_to_audio, sonification, ... visualize chroma vectors (this can be done theoreticaly by pretty_midi), etc. ... 
-
-# TODO: add/fix tempo information to load_midi and other functions accordingly
-
-# TODO: add check for drums to load_midi and all other functions accordingly
 
 #test_tempo()s
