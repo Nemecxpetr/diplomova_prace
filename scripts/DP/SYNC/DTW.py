@@ -5,9 +5,6 @@ Author: Petr Němec
 Part of my master's thesis (https://github.com/Nemecxpetr/diplomova_prace)
 """
 
-import Handler as H
+# libfmp or librosa has implemented some basic DTW - Multi-scale or memory restricted I will have to implement myself
 
-# load midi using MIDI_handler
-H.load_midi()
-
-H.test()
+# TODO: implement cost matrix, warping path etc. 
