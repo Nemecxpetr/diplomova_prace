@@ -1,6 +1,6 @@
-"""
+﻿"""
 Module: audio_handler
-Author: Petr N�mec
+Author: Petr Němec
 License: 
 
 Some functions were taken from or inspired by the FMP Notebooks (https://www.audiolabs-erlangen.de/FMP)

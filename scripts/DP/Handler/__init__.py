@@ -1,11 +1,12 @@
-# Package Handler
+﻿# Package Handler
 """ 
 Handler package
 
-Author: Petr N�mec
+Author: Petr Němec
 License: 
 
-Containing functions for easier handling MIDI and audio files and conversing them to chroma vectors and other visual representations.
+Containing functions for easier MIDI and audio files manipulation. Realizing conversion between midi, csv and audio (yet TODO). 
+Creating chroma vectors and other visual representations. (yet TODO)
 
 Also offers some classes to create note objects for playing - I'm just playin' and learning to programe at this point.
 
