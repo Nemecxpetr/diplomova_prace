@@ -14,12 +14,11 @@ from matplotlib import pyplot as plt
 from matplotlib import patches
 from tabulate import tabulate
 
-
+# FROM FMP NOTEBOOKS - TODO: move it to another file?
 FMP_COLORMAPS = {
     'FMP_1': np.array([[1.0, 0.5, 0.0], [0.33, 0.75, 0.96], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 1.0],
                        [1.0, 0.0, 1.0],  [0.99, 0.51, 0.71], [0.53, 0.0, 0.46], [0.56, 0.93, 0.72], [0, 0, 0.9]])
 }
-
 def color_argument_to_dict(colors, labels_set, default='gray'):
     """Create a dictionary that maps labels to colors.
 
@@ -60,6 +59,62 @@ def color_argument_to_dict(colors, labels_set, default='gray'):
             color_dict[key] = default
 
     return color_dict
+def visualize_piano_roll(score, xlabel='Time (seconds)', ylabel='Pitch', colors='FMP_1', velocity_alpha=False,
+                         figsize=(12, 4), ax=None, dpi=72):
+    """Plot a pianoroll visualization
+
+    Args:
+        score: List of note events
+        xlabel: Label for x axis (Default value = 'Time (seconds)')
+        ylabel: Label for y axis (Default value = 'Pitch')
+        colors: Several options: 1. string of FMP_COLORMAPS, 2. string of matplotlib colormap,
+            3. list or np.ndarray of matplotlib color specifications,
+            4. dict that assigns labels  to colors (Default value = 'FMP_1')
+        velocity_alpha: Use the velocity value for the alpha value of the corresponding rectangle
+            (Default value = False)
+        figsize: Width, height in inches (Default value = (12)
+        ax: The Axes instance to plot on (Default value = None)
+        dpi: Dots per inch (Default value = 72)
+
+    Returns:
+        fig: The created matplotlib figure or None if ax was given.
+        ax: The used axes
+    """
+    fig = None
+    if ax is None:
+        fig = plt.figure(figsize=figsize, dpi=dpi)
+        ax = plt.subplot(1, 1, 1)
+
+    labels_set = sorted(set([note[4] for note in score]))
+    colors = color_argument_to_dict(colors, labels_set)
+
+    pitch_min = min(note[2] for note in score)
+    pitch_max = max(note[2] for note in score)
+    time_min = min(note[0] for note in score)
+    time_max = max(note[0] + note[1] for note in score)
+
+    for start, duration, pitch, velocity, label in score:
+        if velocity_alpha is False:
+            velocity = None
+        rect = patches.Rectangle((start, pitch - 0.5), duration, 1, linewidth=1,
+                                 edgecolor='k', facecolor=colors[label], alpha=velocity)
+        ax.add_patch(rect)
+
+    ax.set_ylim([pitch_min - 1.5, pitch_max + 1.5])
+    ax.set_xlim([min(time_min, 0), time_max + 0.5])
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.grid()
+    ax.set_axisbelow(True)
+    ax.legend([patches.Patch(linewidth=1, edgecolor='k', facecolor=colors[key]) for key in labels_set],
+              labels_set, loc='upper right', framealpha=1)
+
+    if fig is not None:
+        plt.tight_layout()
+
+    return fig, ax
+# END OF Part to be moved
+
 
 def load_midi(fn=os.path.join('..', '..', 'data', 'MIDI', 'test.mid')):
     """Load midi file into the midi_data var
@@ -130,65 +185,9 @@ def list_to_csv(score, fn_out):
 
     return df
 
-def visualize_piano_roll(score, xlabel='Time (seconds)', ylabel='Pitch', colors='FMP_1', velocity_alpha=False,
-                         figsize=(12, 4), ax=None, dpi=72):
-    """Plot a pianoroll visualization
-
-    Args:
-        score: List of note events
-        xlabel: Label for x axis (Default value = 'Time (seconds)')
-        ylabel: Label for y axis (Default value = 'Pitch')
-        colors: Several options: 1. string of FMP_COLORMAPS, 2. string of matplotlib colormap,
-            3. list or np.ndarray of matplotlib color specifications,
-            4. dict that assigns labels  to colors (Default value = 'FMP_1')
-        velocity_alpha: Use the velocity value for the alpha value of the corresponding rectangle
-            (Default value = False)
-        figsize: Width, height in inches (Default value = (12)
-        ax: The Axes instance to plot on (Default value = None)
-        dpi: Dots per inch (Default value = 72)
-
-    Returns:
-        fig: The created matplotlib figure or None if ax was given.
-        ax: The used axes
-    """
-    fig = None
-    if ax is None:
-        fig = plt.figure(figsize=figsize, dpi=dpi)
-        ax = plt.subplot(1, 1, 1)
-
-    labels_set = sorted(set([note[4] for note in score]))
-    colors = color_argument_to_dict(colors, labels_set)
-
-    pitch_min = min(note[2] for note in score)
-    pitch_max = max(note[2] for note in score)
-    time_min = min(note[0] for note in score)
-    time_max = max(note[0] + note[1] for note in score)
-
-    for start, duration, pitch, velocity, label in score:
-        if velocity_alpha is False:
-            velocity = None
-        rect = patches.Rectangle((start, pitch - 0.5), duration, 1, linewidth=1,
-                                 edgecolor='k', facecolor=colors[label], alpha=velocity)
-        ax.add_patch(rect)
-
-    ax.set_ylim([pitch_min - 1.5, pitch_max + 1.5])
-    ax.set_xlim([min(time_min, 0), time_max + 0.5])
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.grid()
-    ax.set_axisbelow(True)
-    ax.legend([patches.Patch(linewidth=1, edgecolor='k', facecolor=colors[key]) for key in labels_set],
-              labels_set, loc='upper right', framealpha=1)
-
-    if fig is not None:
-        plt.tight_layout()
-
-    return fig, ax
-
 def read_csv(fn, header=True, add_label=False):
     """Read a CSV file in table format and creates a pd.DataFrame from it, with observations in the
     rows and variables in the columns.
-
 
     Args:
         fn (str): Filename
@@ -295,6 +294,7 @@ def csv_to_midi(csv, fn_out):
 
     return midi_out
 
+# Testing functions for optimizing the MIDI handler functions
 def test():
     print('First lets check the loading of midi data: ')
     midi_data = load_midi(fn=os.path.join('..', '..', 'data', 'MIDI', 'test.mid'))
@@ -354,14 +354,11 @@ def test_tempo():
     fig, ax = visualize_piano_roll(midi_to_list(new_midi), velocity_alpha=True)
     plt.show()
 
-
-
    
-# TODO: def xml_to_list xml_to_audio, sonification,...
+# TODO: def xml_to_list xml_to_audio, sonification, ... visualize chroma vectors (this can be done theoreticaly by pretty_midi), etc. ... 
 
 # TODO: add/fix tempo information to load_midi and other functions accordingly
 
-#test_drums() # TODO: add check for drums to load_midi and all other functions accordingly
+# TODO: add check for drums to load_midi and all other functions accordingly
 
-
-test_tempo()
+#test_tempo()s

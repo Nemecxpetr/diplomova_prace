@@ -4,13 +4,13 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>20965d57-09fe-4c76-bcb1-278ee55cb743</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>DP\MIDI\MIDI_handler.py</StartupFile>
+    <StartupFile>DP\MIDI\DTW.py</StartupFile>
     <SearchPath>..\..\scripts</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>MIDI_handler</Name>
     <RootNamespace>MIDI_handler</RootNamespace>
-    <InterpreterId>CondaEnv|CondaEnv|DP</InterpreterId>
+    <InterpreterId>Global|VisualStudio|envs</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,6 +21,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="DP\MIDI\DTW.py" />
+    <Compile Include="DP\MIDI\__init__.py" />
     <Compile Include="DP\MIDI\sheet.py" />
     <Compile Include="DP\MIDI\MIDI_handler.py" />
     <Compile Include="DP\__init__.py">
