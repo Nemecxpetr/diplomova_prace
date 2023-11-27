@@ -26,6 +26,7 @@
     <Compile Include="Handler\audio_handler.py" />
     <Compile Include="Handler\MIDI_handler.py" />
     <Compile Include="Handler\symbolic_notes.py" />
+    <Compile Include="Handler\visualizer.py" />
     <Compile Include="Handler\__init__.py" />
     <Compile Include="SYNC\DTW.py" />
   </ItemGroup>
@@ -35,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="CondaEnv|CondaEnv|DP" />
+    <InterpreterReference Include="Global|VisualStudio|envs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

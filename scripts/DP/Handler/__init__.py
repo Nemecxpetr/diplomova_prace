@@ -23,7 +23,10 @@ from .MIDI_handler import load_midi, \
     csv_to_midi, \
     test
 
-from .audio_handler import *
+from .audio_handler import read_audio, \
+    write_audio
+
+from .visualizer import plot_signal_in_time
 
 # symbolic note objects for calculating freq pitch of notes by names etc. ...
 from .symbolic_notes import Note, \
