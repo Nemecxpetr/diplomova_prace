@@ -11,7 +11,7 @@
     <OutputPath>.</OutputPath>
     <Name>DP</Name>
     <RootNamespace>DP</RootNamespace>
-    <InterpreterId>CondaEnv|CondaEnv|DP</InterpreterId>
+    <InterpreterId>Global|VisualStudio|envs</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -25,7 +25,6 @@
     <Compile Include="DP.py" />
     <Compile Include="Handler\audio_handler.py" />
     <Compile Include="Handler\MIDI_handler.py" />
-    <Compile Include="Handler\symbolic_notes.py" />
     <Compile Include="Handler\visualizer.py" />
     <Compile Include="Handler\__init__.py" />
     <Compile Include="SYNC\DTW.py" />
