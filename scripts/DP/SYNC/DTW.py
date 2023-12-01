@@ -16,6 +16,7 @@ import pretty_midi as pm
 import librosa
 from matplotlib import pyplot as plt
 import numpy as np
+import libfmp.c3
 
 
 
@@ -30,6 +31,11 @@ def warping_path(X, Y, show=False):
         # TODO: what data is wp?
         wp (np.ndarray [shape=(N, 2)]): Warping path with index pairs.
     """
+    # choose to use librosa or mueller implementation
+    mueller = True
+
+    # with librosa dtw implementation
+    # TODO: there's something wrong with this
     D, wp = librosa.sequence.dtw(X, Y, subseq=True)
 
     if show==True:
@@ -46,6 +52,30 @@ def warping_path(X, Y, show=False):
 
         plt.show()
 
+
+    # with FMP (Mueller) implementation
+    C = libfmp.c3.compute_cost_matrix(X, Y)
+    D = libfmp.c3.compute_accumulated_cost_matrix(C)
+    P = libfmp.c3.compute_optimal_warping_path(D)
+
+    P = np.array(P)
+
+    plt.figure(figsize=(9, 3))
+    ax = plt.subplot(1, 2, 1)
+    libfmp.c3.plot_matrix_with_points(C, P, linestyle='-', 
+        ax=[ax], aspect='equal', clim=[0, np.max(C)],
+        title='$C$ with optimal warping path', xlabel='Sequence Y', ylabel='Sequence X');
+
+    ax = plt.subplot(1, 2, 2)
+    libfmp.c3.plot_matrix_with_points(D, P, linestyle='-', 
+        ax=[ax], aspect='equal', clim=[0, np.max(D)],
+        title='$D$ with optimal warping path', xlabel='Sequence Y', ylabel='Sequence X');
+
+    plt.show()
+
+    if mueller:
+        wp = P
+
     return wp
 
 
@@ -54,7 +84,7 @@ def test():
     #handle.plot_signal_in_time(test_audio, Fs)
 
     Fs = 22050
-    N = 4410
+    N = 4410//2
     H = N//4
     fn_wav_X = os.path.join('..', '..', 'data', 'audio', 'test.wav')
 
@@ -80,7 +110,7 @@ def test():
     fig.colorbar(img, ax=ax)
     plt.show()
 
-    wp = warping_path(X, Y)
+    wp = warping_path(X, Y, show=True)
 
     print(wp)
 
