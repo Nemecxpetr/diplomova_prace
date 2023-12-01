@@ -21,7 +21,9 @@ from .MIDI_handler import load_midi, \
     read_csv, \
     csv_to_list, \
     csv_to_midi, \
-    test
+    test, \
+    test_tempo
+
 
 from .audio_handler import read_audio, \
     write_audio

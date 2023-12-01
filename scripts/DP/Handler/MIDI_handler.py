@@ -12,7 +12,6 @@ import numpy as np
 import pandas as pd
 import pretty_midi
 import librosa.display
-import libfmp.b
 
 from matplotlib import pyplot as plt
 from matplotlib import patches
@@ -360,7 +359,7 @@ def test_tempo():
     visualize_piano_roll(midi_to_list(new_midi), velocity_alpha=True, ax=ax[1])
     ax[1].set(title='MIDI from CSV')
     fig.tight_layout()
-    plt.show()
+    
 
     Y = pretty_midi.PrettyMIDI.get_chroma(md)
 
