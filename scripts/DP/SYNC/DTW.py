@@ -11,6 +11,7 @@ Aim of this script is basic implementation of score-to-audio synchronization
 """
 import os
 import sys
+from turtle import shape
 import Handler as handle
 import pretty_midi as pm
 import librosa
@@ -97,37 +98,48 @@ def test():
     midi_data = handle.load_midi(path_midi)
     Y = pm.PrettyMIDI.get_chroma(midi_data)
 
-    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10, 6), sharex=False)
-    img = librosa.display.specshow(X, x_axis='frames', y_axis='chroma', cmap='gray_r', hop_length=H, ax=ax[0])
-    ax[0].set(title='Sequence $X$')    
-    ax[0].set_xlabel('Time (frames)')
-    ax[0].set_ylabel('Chroma')  
-    ax[0].label_outer()
+    show = False
+    if show:
+        fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10, 6), sharex=False)
+        img = librosa.display.specshow(X, x_axis='frames', y_axis='chroma', cmap='gray_r', hop_length=H, ax=ax[0])
+        ax[0].set(title='Sequence $X$')    
+        ax[0].set_xlabel('Time (frames)')
+        ax[0].set_ylabel('Chroma')  
+        ax[0].label_outer()
 
-    librosa.display.specshow(Y, x_axis='frames', y_axis='chroma', cmap='gray_r', ax=ax[1])
-    ax[1].set(title='Sequence $Y$')
-    ax[1].set_xlabel('Time (frames)')
-    ax[1].set_ylabel('Chroma')
-    ax[0].label_outer()
+        librosa.display.specshow(Y, x_axis='frames', y_axis='chroma', cmap='gray_r', ax=ax[1])
+        ax[1].set(title='Sequence $Y$')
+        ax[1].set_xlabel('Time (frames)')
+        ax[1].set_ylabel('Chroma')
+        ax[0].label_outer()
     
-    fig.colorbar(img, ax=ax)
-    plt.show()
+        fig.colorbar(img, ax=ax)
+        plt.show()
 
     #NOTE: X = audio chroma, Y = score chroma
-    wp = warping_path(X, Y, show=True)
+    wp = warping_path(X, Y, show=show)
+
+    #print(wp[0:10])
+    print(len(wp))
+    #NOTE: wp is ((x1, y1), (x2, y2), ..., (xn, ym))
 
     #TODO: now we need to adjust the times in the original midi
     # this could be done by turning the original midi to csv adjusting the note start positions and then turning the adjusted csv back to midi
     # the "turning" functions are already created in MIDI_handler.py in Handler package
 
     score = handle.midi_to_list(midi_data)
-    print(score)
+    print (len(score))
+    #TODO: problem!! warping path of the midi data is for the midi data of the chromagram which we need to adjust and then transform back into midi.
+    # Question? How to do that?
 
+    for n in range(len(score[0])):
+         print(score[0][n])
 
+    # question how to adjust if more tones that originally start at the same time are now all different? How does the warping path reflect that?
 
-handle.test()
+#handle.test()
 
 #handle.test_tempo()
 
-#test()
+test()
 
