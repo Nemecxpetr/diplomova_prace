@@ -116,11 +116,9 @@ def test():
     print(wp)
 
 
+handle.test()
 
+#handle.test_tempo()
 
-
-
-
-
-test()
+#test()
 

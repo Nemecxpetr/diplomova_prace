@@ -303,6 +303,8 @@ def test():
     midi_data = load_midi(fn=os.path.join('..', '..', 'data', 'MIDI', 'test.mid'))
     score = midi_to_list(midi_data)
 
+    print(score)
+
     print(tabulate(score, headers=['start', 'duration', 'pitch', 'velocity', 'instrument name']))
     print('')
 
@@ -382,6 +384,3 @@ def test_tempo():
     plt.show()
 
 
-
-
-test_tempo()
