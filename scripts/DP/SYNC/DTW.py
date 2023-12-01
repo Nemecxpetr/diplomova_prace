@@ -1,6 +1,6 @@
 ﻿"""
 Module: DTW
-Author: Petr Němec
+Author: Bc. Petr Němec
 
 Part of my master's thesis (https://github.com/Nemecxpetr/diplomova_prace)
 
@@ -22,7 +22,8 @@ import libfmp.c3
 
 # libfmp or librosa has implemented some basic DTW - Multi-scale or memory restricted I will have to implement myself
 
-# TODO: implement cost matrix, warping path etc. 
+# TODO: implement cost matrix, warping path etc. or use library (libfmp or librosa)
+# NOTE: for now using implementations from libraries
 def warping_path(X, Y, show=False):
     """ Computes warping path between two chromavectors
     Args:
@@ -93,7 +94,8 @@ def test():
     X = librosa.feature.chroma_stft(y=X_wav, sr=Fs, hop_length=H, n_fft=N)
 
     path_midi =os.path.join('..', '..', 'data', 'MIDI', 'test.mid')
-    Y = pm.PrettyMIDI.get_chroma(handle.load_midi(path_midi))
+    midi_data = handle.load_midi(path_midi)
+    Y = pm.PrettyMIDI.get_chroma(midi_data)
 
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10, 6), sharex=False)
     img = librosa.display.specshow(X, x_axis='frames', y_axis='chroma', cmap='gray_r', hop_length=H, ax=ax[0])
@@ -111,9 +113,16 @@ def test():
     fig.colorbar(img, ax=ax)
     plt.show()
 
+    #NOTE: X = audio chroma, Y = score chroma
     wp = warping_path(X, Y, show=True)
 
-    print(wp)
+    #TODO: now we need to adjust the times in the original midi
+    # this could be done by turning the original midi to csv adjusting the note start positions and then turning the adjusted csv back to midi
+    # the "turning" functions are already created in MIDI_handler.py in Handler package
+
+    score = handle.midi_to_list(midi_data)
+    print(score)
+
 
 
 handle.test()

@@ -320,6 +320,8 @@ def test():
     path_midi= os.path.join('..', '..', 'data', 'MIDI', 'from_csv','test.mid')
     midi_data_from_csv = csv_to_midi(path_csv, path_midi)
 
+    print(score)
+
     # using the variable ax for single a Axes
 
     fig, ax = visualize_piano_roll(midi_to_list(midi_data_from_csv), velocity_alpha=True)
