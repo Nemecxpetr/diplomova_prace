@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>ec057b25-a664-4b55-b81d-ee019bd3ffaa</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>SYNC\DTW.py</StartupFile>
+    <StartupFile>Handler\MIDI_handler.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>

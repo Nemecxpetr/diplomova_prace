@@ -38,7 +38,7 @@ def warping_path(X, Y, show=False):
     # TODO: there's something wrong with this
     D, wp = librosa.sequence.dtw(X, Y, subseq=True)
 
-    if show==True:
+    if show and not mueller:
         fig, ax = plt.subplots(nrows=2, sharex=False)
         img = librosa.display.specshow(D, x_axis='frames', y_axis='frames',
                                        ax=ax[0])
@@ -59,19 +59,20 @@ def warping_path(X, Y, show=False):
     P = libfmp.c3.compute_optimal_warping_path(D)
 
     P = np.array(P)
+    
+    if show:
+        plt.figure(figsize=(9, 3))
+        ax = plt.subplot(1, 2, 1)
+        libfmp.c3.plot_matrix_with_points(C, P, linestyle='-', 
+            ax=[ax], aspect='equal', clim=[0, np.max(C)],
+            title='$C$ with optimal warping path', xlabel='Sequence Y', ylabel='Sequence X');
 
-    plt.figure(figsize=(9, 3))
-    ax = plt.subplot(1, 2, 1)
-    libfmp.c3.plot_matrix_with_points(C, P, linestyle='-', 
-        ax=[ax], aspect='equal', clim=[0, np.max(C)],
-        title='$C$ with optimal warping path', xlabel='Sequence Y', ylabel='Sequence X');
+        ax = plt.subplot(1, 2, 2)
+        libfmp.c3.plot_matrix_with_points(D, P, linestyle='-', 
+            ax=[ax], aspect='equal', clim=[0, np.max(D)],
+            title='$D$ with optimal warping path', xlabel='Sequence Y', ylabel='Sequence X');
 
-    ax = plt.subplot(1, 2, 2)
-    libfmp.c3.plot_matrix_with_points(D, P, linestyle='-', 
-        ax=[ax], aspect='equal', clim=[0, np.max(D)],
-        title='$D$ with optimal warping path', xlabel='Sequence Y', ylabel='Sequence X');
-
-    plt.show()
+        plt.show()
 
     if mueller:
         wp = P
@@ -101,7 +102,7 @@ def test():
     ax[0].set_ylabel('Chroma')  
     ax[0].label_outer()
 
-    librosa.display.specshow(Y, x_axis='frames', y_axis='chroma', cmap='gray_r', hop_length=H, ax=ax[1])
+    librosa.display.specshow(Y, x_axis='frames', y_axis='chroma', cmap='gray_r', ax=ax[1])
     ax[1].set(title='Sequence $Y$')
     ax[1].set_xlabel('Time (frames)')
     ax[1].set_ylabel('Chroma')

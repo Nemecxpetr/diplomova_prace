@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import pretty_midi
 import librosa.display
+import libfmp.b
 
 from matplotlib import pyplot as plt
 from matplotlib import patches
@@ -353,8 +354,35 @@ def test_tempo():
     path_midi = os.path.join('..', '..', 'data', 'MIDI','from_csv', 'test_tempo.mid')
     new_midi = csv_to_midi(csv, path_midi)
 
-    fig, ax = visualize_piano_roll(midi_to_list(md), velocity_alpha=True)
-    fig, ax = visualize_piano_roll(midi_to_list(new_midi), velocity_alpha=True)
+    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 8))
+    visualize_piano_roll(midi_to_list(md), velocity_alpha=True, ax=ax[0])
+    ax[0].set(title='Original MIDI')
+    visualize_piano_roll(midi_to_list(new_midi), velocity_alpha=True, ax=ax[1])
+    ax[1].set(title='MIDI from CSV')
+    fig.tight_layout()
     plt.show()
 
-#test_tempo()s
+    Y = pretty_midi.PrettyMIDI.get_chroma(md)
+
+    fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(8,5), sharex=False)
+    librosa.display.specshow(Y, x_axis='s', y_axis='chroma', cmap='gray_r', ax=axs[0])
+    axs[0].set(title='Original MIDI chroma')    
+    axs[0].set_xlabel('Time (seconds)')
+    axs[0].set_ylabel('Chroma')  
+    axs[0].label_outer()
+    
+
+    librosa.display.specshow(pretty_midi.PrettyMIDI.get_chroma(new_midi), x_axis='s', y_axis='chroma', cmap='gray_r', ax=axs[1])
+    axs[1].set(title='MIDI from CSV chroma')    
+    axs[1].set_xlabel('Time (seconds)')
+    axs[1].set_ylabel('Chroma')  
+    axs[1].label_outer()
+
+    fig.tight_layout()
+    
+    plt.show()
+
+
+
+
+test_tempo()
