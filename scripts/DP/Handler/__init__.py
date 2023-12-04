@@ -28,4 +28,6 @@ from .MIDI_handler import load_midi, \
 from .audio_handler import read_audio, \
     write_audio
 
-from .visualizer import plot_signal_in_time
+from .visualizer import plot_signal_in_time, \
+    plot_spectrograph, \
+    plot_spectrograph_phase

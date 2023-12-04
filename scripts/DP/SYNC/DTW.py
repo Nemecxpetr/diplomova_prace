@@ -18,6 +18,10 @@ import librosa
 from matplotlib import pyplot as plt
 import numpy as np
 import libfmp.c3
+import libfmp.b.b_plot as fmpplot
+import soundfile as sf
+
+from Handler import visualizer
 
 
 
@@ -141,5 +145,22 @@ def test():
 
 #handle.test_tempo()
 
-test()
+#test()
 
+
+path = os.path.join('..', '..', 'data', 'audio', 'test.wav')
+x, Fs = sf.read(path)
+# lets use only left channel
+x = x.T[0]
+
+#visualizer.plot_spectrograph(x, Fs)
+#visualizer.plot_spectrograph_phase(x, Fs)
+N=4096//2
+H=N//2
+X = librosa.stft(x, n_fft = N, hop_length = H, win_length=N, window = 'hann', center = True, pad_mode = "constant")
+gamma = 100
+Y = 20*np.log10(1+gamma*abs(X))
+fig = fmpplot.plot_matrix(Y, Fs)
+plt.yscale('log')
+plt.ylim([20, Fs/2])
+plt.show()
