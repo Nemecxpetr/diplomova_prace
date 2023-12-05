@@ -10,6 +10,7 @@ Aim of this script is basic implementation of score-to-audio synchronization
 
 """
 import os
+from unicodedata import east_asian_width
 import Handler as handle
 import pretty_midi as pm
 import librosa
@@ -145,7 +146,7 @@ def dtw_test(show=True):
         path_csv
     """
     score = handle.midi_to_list(midi_data)
-    synced_score = score
+    synced_score = []
 
     for note in score:
          # 
@@ -155,14 +156,19 @@ def dtw_test(show=True):
          velocity = note[-2]
          label = note[-1]
          
+         #wp = wp.T
          
          # fínd start in wp on position of midi (y) and change it for the position of interpolated wp audio (x) 
-         start_frame = librosa.time_to_frames(start, sr=Fs, n_fft=N, hop_length=H) # compute frame index of original note start, equivallently: #start*Fs/H
+         # NOTE: for now + 1 to the start frame, there is some error and for 0 it returns -1
+         start_frame = librosa.time_to_frames(start, sr=Fs, n_fft=N, hop_length=H) + 1 # compute frame index of original note start, equivallently: #start*Fs/H
          end_frame = librosa.time_to_frames(start+duration, sr=Fs, n_fft=N, hop_length=H)
          
-         for point in wp:
-             new_start_frame = statistics.median(wp[:,start_frame]) # TODO: instead of median interpolated wp before
-             new_end_frame = statistics.median(wp[:,end_frame])
+         start_mask = np.where(wp[:,1] == start_frame)
+         new_start_frame = statistics.median(wp[start_mask][:, 0]) # TODO: instead of median interpolated wp before
+         
+         end_mask = np.where(wp[:, 1] == end_frame)
+         new_end_frame = statistics.median(wp[end_mask][:, 0])
+         
          
          new_start = librosa.frames_to_time(new_start_frame, sr=Fs, hop_length=H, n_fft = N)
          new_duration = librosa.frames_to_time(new_end_frame-new_start_frame, sr=Fs, hop_length=H, n_fft=N)
