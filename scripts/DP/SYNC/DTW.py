@@ -10,18 +10,19 @@ Aim of this script is basic implementation of score-to-audio synchronization
 
 """
 import os
-import sys
-from turtle import shape
 import Handler as handle
 import pretty_midi as pm
 import librosa
 from matplotlib import pyplot as plt
 import numpy as np
+
 import libfmp.c3
-import libfmp.b.b_plot as fmpplot
+from libfmp.c3.c3s2_dtw_plot import plot_matrix_with_points
+
 import soundfile as sf
 
-from Handler import visualizer
+from synctoolbox.dtw.core import compute_warping_path
+from synctoolbox.dtw.cost import cosine_distance
 
 
 
@@ -29,7 +30,7 @@ from Handler import visualizer
 
 # TODO: implement cost matrix, warping path etc. or use library (libfmp or librosa)
 # NOTE: for now using implementations from libraries
-def warping_path(X, Y, show=False):
+def warping_path(X, Y, mueller=False, show=False):
     """ Computes warping path between two chromavectors
     Args:
         X, Y (np.ndarray): chroma vectors ( of shape(12, num_of_time_indices))   
@@ -38,11 +39,11 @@ def warping_path(X, Y, show=False):
         wp (np.ndarray [shape=(N, 2)]): Warping path with index pairs.
     """
     # choose to use librosa or mueller implementation
-    mueller = True
+    mueller = mueller
 
     # with librosa dtw implementation
-    # TODO: there's something wrong with this
-    D, wp = librosa.sequence.dtw(X, Y, subseq=True)
+    C = cosine_distance(X, Y) # from synctoolbox
+    D, wp = librosa.sequence.dtw(C=C)
 
     if show and not mueller:
         fig, ax = plt.subplots(nrows=2, sharex=False)
@@ -64,16 +65,27 @@ def warping_path(X, Y, show=False):
     P = libfmp.c3.compute_optimal_warping_path(D)
 
     P = np.array(P)
-    
+
+    # Synctoolbox
+    _, _, wp_full = compute_warping_path(C=C)
+    # Equivalently, full DTW may be computed using librosa via:
+    # _, wp_librosa = librosa.sequence.dtw(C=C)
+
+    plot_matrix_with_points(C, wp_full.T, linestyle='-',  marker='', aspect='equal',
+                            title='Cost matrix and warping path computed using full DTW',
+
+                            xlabel='MIDI - CSV (frames)', ylabel='Audio (frames)', figsize=(9, 5))
+    plt.show()
+
     if show:
         plt.figure(figsize=(9, 3))
         ax = plt.subplot(1, 2, 1)
-        libfmp.c3.plot_matrix_with_points(C, P, linestyle='-', 
+        plot_matrix_with_points(C, P, linestyle='-', 
             ax=[ax], aspect='equal', clim=[0, np.max(C)],
             title='$C$ with optimal warping path', xlabel='Sequence Y', ylabel='Sequence X');
 
         ax = plt.subplot(1, 2, 2)
-        libfmp.c3.plot_matrix_with_points(D, P, linestyle='-', 
+        plot_matrix_with_points(D, P, linestyle='-', 
             ax=[ax], aspect='equal', clim=[0, np.max(D)],
             title='$D$ with optimal warping path', xlabel='Sequence Y', ylabel='Sequence X');
 
@@ -125,7 +137,10 @@ def dtw_test(show=True):
     print(len(x_wav))
     print(np.shape(X))
     print(np.shape(Y))
-
+   
+    x_coord = []
+    y_coord = []
+    
     #NOTE: wp is ((x1, y1), (x2, y2), ..., (xn, ym))
     # What is x and y - is it time index or is it time in seconds? -> we need time in seconds preferebly so that we can adjust the time in csv file later
     # - if this is index we need to compute the time in seconds with the T_coef function (I could probably use the one in libfmp, or just quickly create one)
@@ -152,7 +167,7 @@ def dtw_test(show=True):
     # It should probably work
 
 
-dtw_test(show=True)
+dtw_test(show=False)
 
 
 """
