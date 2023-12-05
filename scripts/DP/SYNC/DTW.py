@@ -57,8 +57,7 @@ def warping_path(X, Y, show=False):
                   title='Matching cost function')
 
         plt.show()
-
-
+    
     # with FMP (Mueller) implementation
     C = libfmp.c3.compute_cost_matrix(X, Y)
     D = libfmp.c3.compute_accumulated_cost_matrix(C)
@@ -86,23 +85,22 @@ def warping_path(X, Y, show=False):
     return wp
 
 
-def test():
+def dtw_test(show=True):
     #test_audio, Fs = handle.read_audio(os.path.join('..', '..', 'data', 'audio', 'test.wav'))
     #handle.plot_signal_in_time(test_audio, Fs)
 
     Fs = 22050
     N = 4410//2
     H = N//4
-    fn_wav_X = os.path.join('..', '..', 'data', 'audio', 'test.wav')
+    fn_wav_X = os.path.join('..', '..', 'data', 'audio', 'DTW_test.wav')
 
     X_wav, Fs = librosa.load(fn_wav_X, sr=Fs)
     X = librosa.feature.chroma_stft(y=X_wav, sr=Fs, hop_length=H, n_fft=N)
 
-    path_midi =os.path.join('..', '..', 'data', 'MIDI', 'test.mid')
+    path_midi =os.path.join('..', '..', 'data', 'MIDI', 'DTW_test.mid')
     midi_data = handle.load_midi(path_midi)
     Y = pm.PrettyMIDI.get_chroma(midi_data)
 
-    show = False
     if show:
         fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10, 6), sharex=False)
         img = librosa.display.specshow(X, x_axis='frames', y_axis='chroma', cmap='gray_r', hop_length=H, ax=ax[0])
@@ -126,41 +124,48 @@ def test():
     #print(wp[0:10])
     print(len(wp))
     #NOTE: wp is ((x1, y1), (x2, y2), ..., (xn, ym))
+    # What is x and y - is it time index or is it time in seconds? -> we need time in seconds preferebly so that we can adjust the time in csv file later
+    # - if this is index we need to compute the time in seconds with the T_coef function (I could probably use the one in libfmp, or just quickly create one)
+    # what i need for that is the knowledge of N, H and Fs
 
     #TODO: now we need to adjust the times in the original midi
-    # this could be done by turning the original midi to csv adjusting the note start positions and then turning the adjusted csv back to midi
-    # the "turning" functions are already created in MIDI_handler.py in Handler package
 
     score = handle.midi_to_list(midi_data)
     print (len(score))
     #TODO: problem!! warping path of the midi data is for the midi data of the chromagram which we need to adjust and then transform back into midi.
     # Question? How to do that?
+    #  
+    # I aksed Prof. Mueller and he said one way to synchronize the two objects is to interpolate the warping path
+    # the best thing to do would be to interpolate the warping path so that it is "continuous" 
+    # (more on the struggle of interpolation later -> TODO)
+    # then find new values for midi notes (original time values in the csv_from_midi object)
 
     for n in range(len(score[0])):
          print(score[0][n])
 
     # question how to adjust if more tones that originally start at the same time are now all different? How does the warping path reflect that?
 
-#handle.test()
 
-#handle.test_tempo()
-
-#test()
+dtw_test()
 
 
-path = os.path.join('..', '..', 'data', 'audio', 'test.wav')
-x, Fs = sf.read(path)
-# lets use only left channel
-x = x.T[0]
+"""
+Pomocné funkce pro tisk do diplomové práce
+"""
+#TODO: přesunout do jiného souboru (nejlépe DP.py)
 
-#visualizer.plot_spectrograph(x, Fs)
-#visualizer.plot_spectrograph_phase(x, Fs)
-N=4096//2
-H=N//2
-X = librosa.stft(x, n_fft = N, hop_length = H, win_length=N, window = 'hann', center = True, pad_mode = "constant")
-gamma = 100
-Y = 20*np.log10(1+gamma*abs(X))
-fig = fmpplot.plot_matrix(Y, Fs)
-plt.yscale('log')
-plt.ylim([20, Fs/2])
-plt.show()
+def ukazka_spektrogramu():
+    path = os.path.join('..', '..', 'data', 'audio', 'test.wav')
+    x, Fs = sf.read(path)
+    # lets use only left channel
+    x = x.T[0]
+
+    N=4096//2
+    H=N//2
+    X = librosa.stft(x, n_fft = N, hop_length = H, win_length=N, window = 'hann', center = True, pad_mode = "constant")
+    gamma = 100
+    Y = 20*np.log10(1+gamma*abs(X))
+    fig = fmpplot.plot_matrix(Y, Fs)
+    plt.yscale('log')
+    plt.ylim([20, Fs/2])
+    plt.show()
