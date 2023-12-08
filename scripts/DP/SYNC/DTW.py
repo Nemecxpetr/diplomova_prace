@@ -26,51 +26,27 @@ import soundfile as sf
 
 from synctoolbox.dtw.core import compute_warping_path
 from synctoolbox.dtw.cost import cosine_distance
+from synctoolbox.dtw.mrmsdtw import sync_via_mrmsdtw
 
 
-
-# libfmp or librosa has implemented some basic DTW - Multi-scale or memory restricted I will have to implement myself
-
-# TODO: implement cost matrix, warping path etc. or use library (libfmp or librosa)
-# NOTE: for now using implementations from libraries
-def warping_path(X, Y, mueller=False, show=False):
+def warping_path(X, Y, show=False):
     """ Computes warping path between two chromavectors
     Args:
-        X, Y (np.ndarray): chroma vectors ( of shape(12, num_of_time_indices))   
+        X, Y (np.ndarray): chroma vectors (of shape(12, num_of_time_indices)) 
+            now we use synctoolbox which uses multiple resolutions for MrMsDTW
     Returns: 
-        # TODO: what data is wp?
         wp (np.ndarray [shape=(N, 2)]): Warping path with index pairs.
     """
-    # choose to use librosa or mueller implementation
-    mueller = mueller
 
-    # with librosa dtw implementation
-    C = cosine_distance(X, Y) # from synctoolbox
-    _, wp = librosa.sequence.dtw(C=C)
-    
-    # with FMP (Mueller) implementation
-    C = libfmp.c3.compute_cost_matrix(X, Y)
-    D = libfmp.c3.compute_accumulated_cost_matrix(C)
-    P = libfmp.c3.compute_optimal_warping_path(D)
-
-    P = np.array(P)
-
-    # Synctoolbox
-    _, _, wp_full = compute_warping_path(C=C)
-
-    if show and not mueller:
-        fig, ax = plt.subplots(nrows=2, sharex=False)
-        img = librosa.display.specshow(D, x_axis='frames', y_axis='frames',
-                                       ax=ax[0])
-        ax[0].set(title='DTW cost', xlabel='Noisy sequence', ylabel='Target')
-        ax[0].plot(wp[:, 1], wp[:, 0], label='Optimal path', color='y')
-        ax[0].legend()
-        fig.colorbar(img, ax=ax[0])
-        ax[1].plot(D[-1, :] / wp.shape[0])
-        ax[1].set(xlim=[0, Y.shape[1]], #ylim=[0, 2],
-                  title='Matching cost function')
-
-        plt.show()
+    # Synctoolbox implementation
+    wp_full = sync_via_mrmsdtw(f_chroma1=X, 
+                      #f_onset1=f_DLNCO_audio, 
+                      f_chroma2=Y, 
+                      #f_onset2=f_DLNCO_annotation, 
+                      #input_feature_rate=feature_rate, 
+                      #step_weights=step_weights, 
+                      #threshold_rec=threshold_rec, 
+                      verbose=False)
 
     if show:
         plot_matrix_with_points(C, wp_full.T, linestyle='-',  marker='', aspect='equal',
