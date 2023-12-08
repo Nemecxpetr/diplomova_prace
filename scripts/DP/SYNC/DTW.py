@@ -17,6 +17,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 import scipy
 
+from libfmp.b.b_plot import plot_matrix 
+
 import soundfile as sf
 
 from synctoolbox.dtw.utils import make_path_strictly_monotonic
@@ -96,14 +98,14 @@ def dtw_test(show=True):
     Fs = 48000
     N = 4096
     H = N//8
-    fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test_whistle.wav')
+    fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'test.wav')
     # TODO: is this correct?
     feature_rate = Fs/H
 
     x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
     X = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
 
-    path_midi =os.path.join('..', '..', 'data', 'MIDI', 'DTW_test.mid')
+    path_midi =os.path.join('..', '..', 'data', 'MIDI', 'test.mid')
     midi_data = handle.load_midi(path_midi)
     Y = pm.PrettyMIDI.get_chroma(midi_data)
 
@@ -124,12 +126,14 @@ def dtw_test(show=True):
         fig.colorbar(img, ax=ax)
         plt.show()
 
+
     #NOTE: X = audio chroma, Y = score chroma
     wp = warping_path(X, Y, feature_rate=feature_rate, show=show)
-    midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_whistle.mid')    
-    csv_path = os.path.join('..', '..', 'data', 'CSV',  'dtw_test_synced_with_whistle.csv')    
+    midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'test.mid')    
+    csv_path = os.path.join('..', '..', 'data', 'CSV',  'test.csv')    
     create_synced_object(midi_data, wp, feature_rate=feature_rate, path_midi = midi_path, path_csv = csv_path)
-
+    
+    """ Test different audio with dtw_test.mid
     fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test.wav')
     x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
     X_whistle = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
@@ -147,8 +151,7 @@ def dtw_test(show=True):
     midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_voice_slow.mid')    
     csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_voice_slow.csv')    
     create_synced_object(midi_data, wp_whistle, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
-    
-
+    """
     # TODO: create compare midi function that will plot piano roll of original and new midi
     #handle.compare_midi(synced_midi, midi_data)
 
@@ -157,7 +160,7 @@ def dtw_test(show=True):
     # It should probably work
 
 
-dtw_test(show=False)
+dtw_test(show=True)
 
 
 """
@@ -176,7 +179,7 @@ def ukazka_spektrogramu():
     X = librosa.stft(x, n_fft = N, hop_length = H, win_length=N, window = 'hann', center = True, pad_mode = "constant")
     gamma = 100
     Y = 20*np.log10(1+gamma*abs(X))
-    fig = fmpplot.plot_matrix(Y, Fs)
+    fig = plot_matrix(Y, Fs)
     plt.yscale('log')
     plt.ylim([20, Fs/2])
     plt.show()

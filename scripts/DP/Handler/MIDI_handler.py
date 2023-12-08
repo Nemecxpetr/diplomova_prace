@@ -6,6 +6,7 @@ License:
 Some functions were taken from or inspired by the FMP Notebooks (https://www.audiolabs-erlangen.de/FMP)
 """
 
+from copy import deepcopy
 import os
 import sys
 import numpy as np
@@ -152,13 +153,12 @@ def midi_to_list(midi):
         raise RuntimeError('midi must be a path to a midi file or pretty_midi.PrettyMIDI')
     
     # TODO: adjust the start and duration times even if there are tempo changes
-    tempo_change, tempo = midi_data.get_tempo_changes()
+    tempo_changes, tempo = midi_data.get_tempo_changes()
     
     score = []
         
     for instrument in midi_data.instruments:
         for note in instrument.notes:
-            # NOTE: this part i did long time ago and seems omnious now
             t = tempo[0] # get the tempo from the tempo list by getting the index of current tempo change index
                 
             start = note.start*(t/120)
@@ -167,7 +167,7 @@ def midi_to_list(midi):
 
             pitch = note.pitch
             velocity = note.velocity / 128.
-            score.append([start, end, duration, pitch, velocity, instrument.name])
+            score.append([start, end, duration, pitch, velocity, instrument.name.lower()])
 
     return score
 
@@ -236,7 +236,7 @@ def csv_to_midi(csv, fn_out):
     """Convert a csv to midi file
 
     Args: 
-        csv (str or pd.DataFrame): Either a path to a csv file or a data frame
+        csv (str or pd.DataFrame): Either a path to a csv file or a data frame with note information
         fn_out (str): The path of the midi file to be created (including ../name.mid)
 
     Returns: 
@@ -298,6 +298,16 @@ def csv_to_midi(csv, fn_out):
     midi_out.write(fn_out)
 
     return midi_out
+
+# TODO: try different aproach with changing the original midi instead of creating a completely new midi from csv
+def midi_and_csv_to_midi(pm_original_midi, df_warped, fn_out):
+    # deep copy original midi
+    pm_new_midi = deepcopy(pm_original_midi)
+    new_times = []
+    pm_new_midi.adjust_times(all, new_times)
+    return pm_new_midi
+    
+
 
 # Testing functions for optimizing the MIDI handler functions
 def test():
