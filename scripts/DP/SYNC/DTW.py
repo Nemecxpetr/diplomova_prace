@@ -10,26 +10,21 @@ Aim of this script is basic implementation of score-to-audio synchronization
 
 """
 import os
-from unicodedata import east_asian_width
 import Handler as handle
 import pretty_midi as pm
 import librosa
 from matplotlib import pyplot as plt
 import numpy as np
-import statistics
-import pandas as pd
-
-import libfmp.c3
-from libfmp.c3.c3s2_dtw_plot import plot_matrix_with_points
+import scipy
 
 import soundfile as sf
 
-from synctoolbox.dtw.core import compute_warping_path
-from synctoolbox.dtw.cost import cosine_distance
+from synctoolbox.dtw.utils import make_path_strictly_monotonic
 from synctoolbox.dtw.mrmsdtw import sync_via_mrmsdtw
+from synctoolbox.feature.csv_tools import read_csv_to_df
 
 
-def warping_path(X, Y, show=False):
+def warping_path(X, Y, feature_rate=50, show=False):
     """ Computes warping path between two chromavectors
     Args:
         X, Y (np.ndarray): chroma vectors (of shape(12, num_of_time_indices)) 
@@ -39,41 +34,22 @@ def warping_path(X, Y, show=False):
     """
 
     # Synctoolbox implementation
-    wp_full = sync_via_mrmsdtw(f_chroma1=X, 
+    wp_full = sync_via_mrmsdtw(f_chroma1=X,
                       #f_onset1=f_DLNCO_audio, 
                       f_chroma2=Y, 
                       #f_onset2=f_DLNCO_annotation, 
-                      #input_feature_rate=feature_rate, 
+                      input_feature_rate=feature_rate, 
                       #step_weights=step_weights, 
                       #threshold_rec=threshold_rec, 
-                      verbose=False)
+                      verbose=show)
 
-    if show:
-        plot_matrix_with_points(C, wp_full.T, linestyle='-',  marker='', aspect='equal',
-                            title='Cost matrix and warping path computed using full DTW',
-
-                            xlabel='MIDI - CSV (frames)', ylabel='Audio (frames)', figsize=(9, 5))
-        plt.show()
-    
-        plt.figure(figsize=(9, 3))
-        ax = plt.subplot(1, 2, 1)
-        plot_matrix_with_points(C, P, linestyle='-', 
-            ax=[ax], aspect='equal', clim=[0, np.max(C)],
-            title='$C$ with optimal warping path', xlabel='Sequence Y', ylabel='Sequence X');
-
-        ax = plt.subplot(1, 2, 2)
-        plot_matrix_with_points(D, P, linestyle='-', 
-            ax=[ax], aspect='equal', clim=[0, np.max(D)],
-            title='$D$ with optimal warping path', xlabel='Sequence Y', ylabel='Sequence X');
-
-        plt.show()
-
-    if mueller:
-        wp = P
+    # For application we need the path to be strictly monotonic!
+    # Theres multiple ways to do so - interpolation, omiting some values, etc. ...
+    wp = make_path_strictly_monotonic(wp_full)
 
     return wp
 
-def create_synced_object(original_midi_data, wp, Fs, H, path_midi, path_csv):
+def create_synced_object(original_midi_data, wp, feature_rate, path_midi, path_csv):
     """
     Creates synchronized midi and csv object at specified locations
     
@@ -84,35 +60,11 @@ def create_synced_object(original_midi_data, wp, Fs, H, path_midi, path_csv):
         H
         path_midi
         path_csv
+    Returns:
+        df_warped(pd.dataFrame): data frame with "midi-csv" formated data warped with the provided warping path
     """
-    score = handle.midi_to_list(original_midi_data)
-    synced_score = []
-
-    for note in score:
-        # 
-        start = note[0]
-        duration = note[1]
-        pitch = note[2]
-        velocity = note[-2]
-        label = note[-1]
-        
-        
-        # fínd start in wp on position of midi (y) and change it for the position of interpolated wp audio (x) 
-        # NOTE: error giving -1 for first iteration??
-        start_frame = librosa.time_to_frames(start, sr=Fs, hop_length=H)  # compute frame index of original note start, equivallently: #start*Fs/H
-        end_frame = librosa.time_to_frames(start+duration, sr=Fs, hop_length=H)
-        
-        start_mask = np.where(wp[:,1] == start_frame)
-        new_start_frame = statistics.median(wp[start_mask][:, 0]) # TODO: instead of median interpolated wp before
-        
-        end_mask = np.where(wp[:, 1] == end_frame)
-        new_end_frame = statistics.median(wp[end_mask][:, 0])
-        
-        
-        new_start = librosa.frames_to_time(new_start_frame, sr=Fs, hop_length=H)
-        new_duration = librosa.frames_to_time(new_end_frame-new_start_frame, sr=Fs, hop_length=H)
-        
-        synced_score.append([new_start, new_duration, pitch, velocity, label])
+    
+    df_annotated = handle.list_to_csv(handle.midi_to_list(original_midi_data))
         
     #NOTE: problem!! warping path of the midi data is for the midi data of the chromagram which we need to adjust and then transform back into midi.
     # Question? How to do that?
@@ -121,11 +73,19 @@ def create_synced_object(original_midi_data, wp, Fs, H, path_midi, path_csv):
     # the best thing to do would be to interpolate the warping path so that it is "continuous" 
     # (more on the struggle of interpolation later -> TODO)
     # then find new values for midi notes (original time values in the csv_from_midi object)
-    #
-    # If I don't want to interpolate other idea could be to use different warping path conditions
+
+    df_warped = df_annotated.copy(deep=True)
+    df_warped["end"] = df_warped["start"] + df_warped["duration"]
+    df_warped[['start', 'end']] = scipy.interpolate.interp1d(wp[1] / feature_rate, 
+                               wp[0] / feature_rate, kind='linear', fill_value="extrapolate")(original_midi_data[['start', 'end']])
+    df_warped["duration"] = df_warped["end"] - df_warped["start"]
+    note_list = df_warped[['start', 'duration', 'pitch', 'velocity']].values.tolist()
+
     
-    synced_csv = handle.list_to_csv(synced_score, path_csv)  
-    synced_midi = handle.csv_to_midi(synced_csv, path_midi)
+    synced_csv = handle.list_to_csv(note_list, path_csv)  
+    synced_midi = handle.csv_to_midi(df_warped, path_midi)
+    
+    return df_warped
 
 
 def dtw_test(show=True):
@@ -137,6 +97,8 @@ def dtw_test(show=True):
     N = 4096
     H = N//8
     fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test_whistle.wav')
+    # TODO: is this correct?
+    feature_rate = Fs/H
 
     x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
     X = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
@@ -163,28 +125,28 @@ def dtw_test(show=True):
         plt.show()
 
     #NOTE: X = audio chroma, Y = score chroma
-    wp = warping_path(X, Y, show=show)
+    wp = warping_path(X, Y, feature_rate=feature_rate, show=show)
     midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_whistle.mid')    
     csv_path = os.path.join('..', '..', 'data', 'CSV',  'dtw_test_synced_with_whistle.csv')    
-    create_synced_object(midi_data, wp, Fs, H, path_midi = midi_path, path_csv = csv_path)
+    create_synced_object(midi_data, wp, feature_rate=feature_rate, path_midi = midi_path, path_csv = csv_path)
 
     fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test.wav')
     x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
     X_whistle = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
-    wp_whistle = warping_path(X_whistle, Y, show=show)
+    wp_whistle = warping_path(X_whistle, Y, feature_rate=feature_rate, show=show)
 
     midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_ms_piano.mid')    
     csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_ms_piano.csv')    
-    create_synced_object(midi_data, wp_whistle, Fs, H, path_midi=midi_path, path_csv = csv_path )
+    create_synced_object(midi_data, wp_whistle, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
     
     fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test_voice_slow.wav')
     x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
     X_whistle = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
-    wp_whistle = warping_path(X_whistle, Y, show=show)
+    wp_whistle = warping_path(X_whistle, Y,feature_rate=feature_rate, show=show)
 
     midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_voice_slow.mid')    
     csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_voice_slow.csv')    
-    create_synced_object(midi_data, wp_whistle, Fs, H, path_midi=midi_path, path_csv = csv_path )
+    create_synced_object(midi_data, wp_whistle, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
     
 
     # TODO: create compare midi function that will plot piano roll of original and new midi

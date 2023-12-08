@@ -158,19 +158,20 @@ def midi_to_list(midi):
         
     for instrument in midi_data.instruments:
         for note in instrument.notes:
+            # NOTE: this part i did long time ago and seems omnious now
             t = tempo[0] # get the tempo from the tempo list by getting the index of current tempo change index
                 
             start = note.start*(t/120)
-            duration = -start+note.end*(t/120)
-                
+            end = note.end*(t/120)
+            duration = -start+end                
 
             pitch = note.pitch
             velocity = note.velocity / 128.
-            score.append([start, duration, pitch, velocity, instrument.name])
+            score.append([start, end, duration, pitch, velocity, instrument.name])
 
     return score
 
-def list_to_csv(score, fn_out):
+def list_to_csv(note_list, fn_out=None):
     """Write a list of note events (comprising a start time, duration, pitch, velocity, and label for each note event)
     to a CSV file
 
@@ -181,10 +182,10 @@ def list_to_csv(score, fn_out):
     Returns: 
         df (pd.DataFrame): data frame with the information saved to csv
     """
-    df = pd.DataFrame(score, columns=['Start', 'Duration', 'Pitch', 'Velocity', 'Instrument'])
+    df = pd.DataFrame(note_list, columns=['start', 'end', 'duration', 'pitch', 'velocity', 'instrument'])
     # ideally, I would like to use float_format='%.3f', but then the numeric columns are considered as strings and,
     # therefore, are quoted
-    df.to_csv(fn_out, sep=';', index=False, quoting=2)
+    if fn_out is not None:  df.to_csv(fn_out, sep=';', index=False, quoting=2)
 
     return df
 
