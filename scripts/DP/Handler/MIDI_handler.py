@@ -259,12 +259,13 @@ def csv_to_midi(csv, fn_out):
 
     # Iterate over the rows of the DataFrame and add MIDI information to midi_out
     for _, row in df.iterrows():
-        start_time = float(row['Start'])
-        duration = float(row['Duration'])
-        pitch = int(row['Pitch'])
-        velocity = int(row['Velocity']*128)
+        start_time = float(row['start'])
+        end_time = float(row['end'])
+        duration = float(row['duration'])
+        pitch = int(row['pitch'])
+        velocity = int(row['velocity']*128)
         try:
-            instrument_name = row['Instrument']
+            instrument_name = row['instrument']
             instrument_id = pretty_midi.instrument_name_to_program(instrument_name)
         except ValueError:
             print('Not a valid instrument name - instrument set to piano')
@@ -283,7 +284,7 @@ def csv_to_midi(csv, fn_out):
             velocity=velocity,
             pitch=pitch,
             start=start_time,
-            end=start_time + duration
+            end=end_time
         )
 
         # Add the note to the instrument

@@ -77,9 +77,9 @@ def create_synced_object(original_midi_data, wp, feature_rate, path_midi, path_c
     df_warped = df_annotated.copy(deep=True)
     df_warped["end"] = df_warped["start"] + df_warped["duration"]
     df_warped[['start', 'end']] = scipy.interpolate.interp1d(wp[1] / feature_rate, 
-                               wp[0] / feature_rate, kind='linear', fill_value="extrapolate")(original_midi_data[['start', 'end']])
+                               wp[0] / feature_rate, kind='linear', fill_value="extrapolate")(df_annotated[['start', 'end']])
     df_warped["duration"] = df_warped["end"] - df_warped["start"]
-    note_list = df_warped[['start', 'duration', 'pitch', 'velocity']].values.tolist()
+    note_list = df_warped[['start', 'end', 'duration', 'pitch', 'velocity', 'instrument']].values.tolist()
 
     
     synced_csv = handle.list_to_csv(note_list, path_csv)  
@@ -157,7 +157,7 @@ def dtw_test(show=True):
     # It should probably work
 
 
-dtw_test(show=True)
+dtw_test(show=False)
 
 
 """
