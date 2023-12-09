@@ -63,7 +63,7 @@ def plot_spectrogram(x, Fs):
     X = librosa.stft(x, n_fft = N, hop_length = H, win_length=N, window = 'hann', center = True, pad_mode = "constant")
     gamma = 100
     Y = 20*np.log10(1+gamma*abs(X))
-    fig = plot_matrix(Y, Fs)
+    fig = plot_matrix(Y,Fs=Fs/H)
     plt.yscale('log')
     plt.ylim([20, Fs/2])
     plt.show()

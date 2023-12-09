@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
 import os
 
 Fs = 48000
-fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test.wav')
+fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'test.wav')
 x, Fs = librosa.load(fn_wav_x, sr=Fs, mono=True)
 fig, ax = plot_signal_in_time(x=x, Fs=Fs)
 #plt.show()
