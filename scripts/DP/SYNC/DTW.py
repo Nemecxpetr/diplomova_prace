@@ -11,19 +11,14 @@ Aim of this script is basic implementation of score-to-audio synchronization
 """
 import os
 import Handler as handle
-import pretty_midi as pm
 import librosa
 from matplotlib import pyplot as plt
-import numpy as np
 import scipy
-
-from libfmp.b.b_plot import plot_matrix 
-
-import soundfile as sf
 
 from synctoolbox.dtw.utils import make_path_strictly_monotonic
 from synctoolbox.dtw.mrmsdtw import sync_via_mrmsdtw
-from synctoolbox.feature.csv_tools import read_csv_to_df
+from synctoolbox.feature.csv_tools import df_to_pitch_features
+from synctoolbox.feature.chroma import pitch_to_chroma
 
 
 def warping_path(X, Y, feature_rate=50, show=False):
@@ -51,7 +46,7 @@ def warping_path(X, Y, feature_rate=50, show=False):
 
     return wp
 
-def create_synced_object(original_midi_data, wp, feature_rate, path_midi, path_csv):
+def create_synced_object(df_original_midi_data, wp, feature_rate, path_midi, path_csv):
     """
     Creates synchronized midi and csv object at specified locations
     
@@ -66,7 +61,7 @@ def create_synced_object(original_midi_data, wp, feature_rate, path_midi, path_c
         df_warped(pd.dataFrame): data frame with "midi-csv" formated data warped with the provided warping path
     """
     
-    df_annotated = handle.list_to_csv(handle.midi_to_list(original_midi_data))
+    df_annotated = df_original_midi_data
         
     #NOTE: problem!! warping path of the midi data is for the midi data of the chromagram which we need to adjust and then transform back into midi.
     # Question? How to do that?
@@ -97,27 +92,31 @@ def dtw_test(show=True):
     # This settings showed to be crucial!!
     Fs = 48000
     N = 4096
-    H = N//8
-    fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'test.wav')
+    H = N//16
+    fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test.wav')
     # TODO: is this correct?
     feature_rate = Fs/H
 
     x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
-    X = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
+    chroma_audio = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
 
-    path_midi =os.path.join('..', '..', 'data', 'MIDI', 'test.mid')
-    midi_data = handle.load_midi(path_midi)
-    Y = pm.PrettyMIDI.get_chroma(midi_data)
+    path_midi =os.path.join('..', '..', 'data', 'MIDI', 'dtw_test.mid')
+    
+    df_midi = handle.load_midi_as_df(path_midi)
+    f_pitch = df_to_pitch_features(df_midi, feature_rate=feature_rate)
+    f_chroma = pitch_to_chroma(f_pitch=f_pitch)
+    #f_chroma_quantized = quantize_chroma(f_chroma=f_chroma)
+    chroma_midi = f_chroma
 
     if show:
         fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10, 6), sharex=False)
-        img = librosa.display.specshow(X, x_axis='frames', y_axis='chroma', cmap='gray_r', hop_length=H, ax=ax[0])
+        img = librosa.display.specshow(chroma_audio, x_axis='frames', y_axis='chroma', cmap='gray_r', hop_length=H, ax=ax[0])
         ax[0].set(title='Sequence $X$')    
         ax[0].set_xlabel('Time (frames)')
         ax[0].set_ylabel('Chroma')  
         ax[0].label_outer()
 
-        librosa.display.specshow(Y, x_axis='frames', y_axis='chroma', cmap='gray_r', ax=ax[1])
+        librosa.display.specshow(chroma_midi, x_axis='frames', y_axis='chroma', cmap='gray_r', ax=ax[1])
         ax[1].set(title='Sequence $Y$')
         ax[1].set_xlabel('Time (frames)')
         ax[1].set_ylabel('Chroma')
@@ -126,34 +125,34 @@ def dtw_test(show=True):
         fig.colorbar(img, ax=ax)
         plt.show()
 
-
-    #NOTE: X = audio chroma, Y = score chroma
-    wp = warping_path(X, Y, feature_rate=feature_rate, show=show)
-    midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'test.mid')    
-    csv_path = os.path.join('..', '..', 'data', 'CSV',  'test.csv')    
-    create_synced_object(midi_data, wp, feature_rate=feature_rate, path_midi = midi_path, path_csv = csv_path)
+    wp = warping_path(chroma_audio, chroma_midi, feature_rate=feature_rate, show=show)
+    midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced.mid')    
+    csv_path = os.path.join('..', '..', 'data', 'CSV',  'dtw_test_synced.csv')    
+    synced_midi = create_synced_object(df_midi, wp, feature_rate=feature_rate, path_midi = midi_path, path_csv = csv_path)
     
-    """ Test different audio with dtw_test.mid
-    fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test.wav')
-    x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
-    X_whistle = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
-    wp_whistle = warping_path(X_whistle, Y, feature_rate=feature_rate, show=show)
+    # Trying with different files:
+    different_files = False
+    if different_files:
+        fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test.wav')
+        x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
+        X_whistle = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
+        wp_whistle = warping_path(X_whistle, chroma_midi, feature_rate=feature_rate, show=show)
 
-    midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_ms_piano.mid')    
-    csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_ms_piano.csv')    
-    create_synced_object(midi_data, wp_whistle, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
+        midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_ms_piano.mid')    
+        csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_ms_piano.csv')    
+        create_synced_object(df_midi, wp_whistle, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
     
-    fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test_voice_slow.wav')
-    x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
-    X_whistle = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
-    wp_whistle = warping_path(X_whistle, Y,feature_rate=feature_rate, show=show)
+        fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test_voice_eq.wav')
+        x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
+        X_whistle = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
+        wp_whistle = warping_path(X_whistle, chroma_midi,feature_rate=feature_rate, show=show)
 
-    midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_voice_slow.mid')    
-    csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_voice_slow.csv')    
-    create_synced_object(midi_data, wp_whistle, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
-    """
+        midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_voice_eq.mid')    
+        csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_voice_eq.csv')    
+        synced_midi = create_synced_object(df_midi, wp_whistle, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
+
     # TODO: create compare midi function that will plot piano roll of original and new midi
-    #handle.compare_midi(synced_midi, midi_data)
+    handle.compare_midi(synced_midi, df_midi, audio_chroma=None)
 
     # question how to adjust if more tones that originally start at the same time are now all different? How does the warping path reflect that?
     # Now that I think musically about it how would I even align that as a human listener? so I guess it doesn't really matter. If it picks the best match (The WP with least cost)
@@ -162,24 +161,7 @@ def dtw_test(show=True):
 
 dtw_test(show=True)
 
+# test that midi laoded and then saved back doesnť change the midi:
+#handle.MIDI_handler.test()
+# Note: it doesn't for the program but when you actually listen to the midi file it sounds different so that sucks
 
-"""
-Pomocné funkce pro tisk do diplomové práce
-"""
-#TODO: přesunout do jiného souboru (nejlépe DP.py)
-
-def ukazka_spektrogramu():
-    path = os.path.join('..', '..', 'data', 'audio', 'test.wav')
-    x, Fs = sf.read(path)
-    # lets use only left channel
-    x = x.T[0]
-
-    N=4096//2
-    H=N//2
-    X = librosa.stft(x, n_fft = N, hop_length = H, win_length=N, window = 'hann', center = True, pad_mode = "constant")
-    gamma = 100
-    Y = 20*np.log10(1+gamma*abs(X))
-    fig = plot_matrix(Y, Fs)
-    plt.yscale('log')
-    plt.ylim([20, Fs/2])
-    plt.show()

@@ -28,6 +28,7 @@
     <Compile Include="Handler\visualizer.py" />
     <Compile Include="Handler\__init__.py" />
     <Compile Include="SYNC\DTW.py" />
+    <Compile Include="SYNC\sync-insp.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Handler\" />

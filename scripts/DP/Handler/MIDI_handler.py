@@ -8,8 +8,6 @@ Some functions were taken from or inspired by the FMP Notebooks (https://www.aud
 
 from copy import deepcopy
 import os
-import sys
-import numpy as np
 import pandas as pd
 import pretty_midi
 import librosa.display
@@ -18,107 +16,45 @@ from matplotlib import pyplot as plt
 from matplotlib import patches
 from tabulate import tabulate
 
-# FROM FMP NOTEBOOKS - TODO: move it to another file?
-FMP_COLORMAPS = {
-    'FMP_1': np.array([[1.0, 0.5, 0.0], [0.33, 0.75, 0.96], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 1.0],
-                       [1.0, 0.0, 1.0],  [0.99, 0.51, 0.71], [0.53, 0.0, 0.46], [0.56, 0.93, 0.72], [0, 0, 0.9]])
-}
-def color_argument_to_dict(colors, labels_set, default='gray'):
-    """Create a dictionary that maps labels to colors.
+from libfmp.c1.c1s2_symbolic_rep import visualize_piano_roll
 
+INITIAL_TEMPO = 60
+
+def __compare_midi(df_original, df_synced, audio_chroma):
+    """Plot two piano-rolls together with the audio interpretation chroma
     Args:
-        colors: Several options: 1. string of ``FMP_COLORMAPS``, 2. string of matplotlib colormap,
-            3. list or np.ndarray of matplotlib color specifications, 4. dict that assigns labels  to colors
-        labels_set: List of all labels
-        default: Default color, used for labels that are in labels_set, but not in colors
-
-    Returns:
-        color_dict: Dictionary that maps labels to colors
+        df_original
+        df_synced
+        audio_chroma
+    
     """
+    fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(8,5), sharex=False)
+    
+    visualize_piano_roll(csv_to_list(df_original),
+                         xlabel='Time (seconds)',
+                         ylabel='Chroma pitch',
+                         colors='FMP_1',
+                         velocity_alpha=True,
+                         figsize=(8,5),
+                         ax=axs[0])    
+    axs[0].set(title='Original MIDI')     
+    axs[0].label_outer()
+    
+    visualize_piano_roll(csv_to_list(df_synced),
+                         xlabel='Time (seconds)',
+                         ylabel='Chroma pitch',
+                         colors='FMP_1',
+                         velocity_alpha=True,
+                         figsize=(8,5),
+                         ax=axs[1])    
+    axs[1].set(title='Synchronized MIDI')    
+    axs[1].label_outer()
 
-    if isinstance(colors, str):
-        # FMP colormap
-        if colors in FMP_COLORMAPS:
-            color_dict = {l: c for l, c in zip(labels_set, FMP_COLORMAPS[colors])}
-        # matplotlib colormap
-        else:
-            cm = plt.get_cmap(colors)
-            num_labels = len(labels_set)
-            colors = [cm(i / (num_labels + 1)) for i in range(num_labels)]
-            color_dict = {l: c for l, c in zip(labels_set, colors)}
-
-    # list/np.ndarray of colors
-    elif isinstance(colors, (list, np.ndarray, tuple)):
-        color_dict = {l: c for l, c in zip(labels_set, colors)}
-
-    # is already a dict, nothing to do
-    elif isinstance(colors, dict):
-        color_dict = colors
-
-    else:
-        raise ValueError('`colors` must be str, list, np.ndarray, or dict')
-
-    for key in labels_set:
-        if key not in color_dict:
-            color_dict[key] = default
-
-    return color_dict
-def visualize_piano_roll(score, xlabel='Time (seconds)', ylabel='Pitch', colors='FMP_1', velocity_alpha=False,
-                         figsize=(12, 4), ax=None, dpi=72):
-    """Plot a pianoroll visualization
-
-    Args:
-        score: List of note events
-        xlabel: Label for x axis (Default value = 'Time (seconds)')
-        ylabel: Label for y axis (Default value = 'Pitch')
-        colors: Several options: 1. string of FMP_COLORMAPS, 2. string of matplotlib colormap,
-            3. list or np.ndarray of matplotlib color specifications,
-            4. dict that assigns labels  to colors (Default value = 'FMP_1')
-        velocity_alpha: Use the velocity value for the alpha value of the corresponding rectangle
-            (Default value = False)
-        figsize: Width, height in inches (Default value = (12)
-        ax: The Axes instance to plot on (Default value = None)
-        dpi: Dots per inch (Default value = 72)
-
-    Returns:
-        fig: The created matplotlib figure or None if ax was given.
-        ax: The used axes
-    """
-    fig = None
-    if ax is None:
-        fig = plt.figure(figsize=figsize, dpi=dpi)
-        ax = plt.subplot(1, 1, 1)
-
-    labels_set = sorted(set([note[4] for note in score]))
-    colors = color_argument_to_dict(colors, labels_set)
-
-    pitch_min = min(note[2] for note in score)
-    pitch_max = max(note[2] for note in score)
-    time_min = min(note[0] for note in score)
-    time_max = max(note[0] + note[1] for note in score)
-
-    for start, duration, pitch, velocity, label in score:
-        if velocity_alpha is False:
-            velocity = None
-        rect = patches.Rectangle((start, pitch - 0.5), duration, 1, linewidth=1,
-                                 edgecolor='k', facecolor=colors[label], alpha=velocity)
-        ax.add_patch(rect)
-
-    ax.set_ylim([pitch_min - 1.5, pitch_max + 1.5])
-    ax.set_xlim([min(time_min, 0), time_max + 0.5])
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.grid()
-    ax.set_axisbelow(True)
-    ax.legend([patches.Patch(linewidth=1, edgecolor='k', facecolor=colors[key]) for key in labels_set],
-              labels_set, loc='upper right', framealpha=1)
-
-    if fig is not None:
-        plt.tight_layout()
-
-    return fig, ax
-# END OF Part to be moved
-
+    fig.tight_layout()
+    
+    plt.show()
+        
+    return fig, axs
 
 def load_midi(fn=os.path.join('..', '..', 'data', 'MIDI', 'test.mid')):
     """Load midi file into the midi_data var
@@ -161,13 +97,13 @@ def midi_to_list(midi):
         for note in instrument.notes:
             t = tempo[0] # get the tempo from the tempo list by getting the index of current tempo change index
                 
-            start = note.start*(t/120)
-            end = note.end*(t/120)
-            duration = -start+end                
+            start = note.start*(t/INITIAL_TEMPO)
+            end = note.end*(t/INITIAL_TEMPO)
+            duration = end - start                
 
             pitch = note.pitch
             velocity = note.velocity / 128.
-            score.append([start, end, duration, pitch, velocity, instrument.name.lower()])
+            score.append([start, duration, pitch, velocity, instrument.name.lower()])
 
     return score
 
@@ -182,7 +118,7 @@ def list_to_csv(note_list, fn_out=None):
     Returns: 
         df (pd.DataFrame): data frame with the information saved to csv
     """
-    df = pd.DataFrame(note_list, columns=['start', 'end', 'duration', 'pitch', 'velocity', 'instrument'])
+    df = pd.DataFrame(note_list, columns=['start', 'duration', 'pitch', 'velocity', 'instrument'])
     # ideally, I would like to use float_format='%.3f', but then the numeric columns are considered as strings and,
     # therefore, are quoted
     if fn_out is not None:  df.to_csv(fn_out, sep=';', index=False, quoting=2)
@@ -252,7 +188,7 @@ def csv_to_midi(csv, fn_out):
         raise RuntimeError('csv must be a path to a csv file or pd.DataFrame')
 
     # Create a PrettyMIDI object
-    midi_out = pretty_midi.PrettyMIDI(initial_tempo=120)
+    midi_out = pretty_midi.PrettyMIDI(initial_tempo=INITIAL_TEMPO)
 
     # Create a dictionary to keep track of instruments by name
     instruments = {}
@@ -260,7 +196,7 @@ def csv_to_midi(csv, fn_out):
     # Iterate over the rows of the DataFrame and add MIDI information to midi_out
     for _, row in df.iterrows():
         start_time = float(row['start'])
-        end_time = float(row['end'])
+        #end_time = float(row['end'])
         duration = float(row['duration'])
         pitch = int(row['pitch'])
         velocity = int(row['velocity']*128)
@@ -284,7 +220,7 @@ def csv_to_midi(csv, fn_out):
             velocity=velocity,
             pitch=pitch,
             start=start_time,
-            end=end_time
+            end = start_time + duration
         )
 
         # Add the note to the instrument
@@ -298,6 +234,17 @@ def csv_to_midi(csv, fn_out):
     midi_out.write(fn_out)
 
     return midi_out
+
+def load_midi_as_df(fn):
+    """ Loads MIDI file at specified path
+    converts to a list
+    Recalculates all times for one single tempo (INITIAL_TEMPO = 120)
+    Args:
+        fn(path): path to midi file
+    Returns:
+        (pd.DataFrame ): converted midi 
+    """
+    return list_to_csv(midi_to_list(load_midi(fn)))
 
 # TODO: try different aproach with changing the original midi instead of creating a completely new midi from csv
 def midi_and_csv_to_midi(pm_original_midi, df_warped, fn_out):
@@ -324,20 +271,19 @@ def test():
     print('')
 
     path_csv = os.path.join('..', '..', 'data','CSV', 'test.csv')
-    list_to_csv(score, path_csv)
+    original = list_to_csv(score, path_csv)
 
 
     print('We can also create a midi back from the csv file - even though there are some problems and it won_t be the same')
 
     path_midi= os.path.join('..', '..', 'data', 'MIDI', 'from_csv','test.mid')
-    midi_data_from_csv = csv_to_midi(path_csv, path_midi)
+    csv_to_midi(path_csv, path_midi)
+    new_midi = load_midi_as_df(path_midi)
 
-    print(score)
-
-    # using the variable ax for single a Axes
-
-    fig, ax = visualize_piano_roll(midi_to_list(midi_data_from_csv), velocity_alpha=True)
+    __compare_midi(original, new_midi, None)
     plt.show()
+
+    
 
 def test_drums():
     path_drums = os.path.join('..', '..', 'data', 'MIDI', 'test_with_drums.mid')

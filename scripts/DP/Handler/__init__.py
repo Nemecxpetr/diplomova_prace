@@ -21,6 +21,7 @@ from .MIDI_handler import load_midi, \
     read_csv, \
     csv_to_list, \
     csv_to_midi, \
+    load_midi_as_df, \
     test, \
     test_tempo
 
@@ -30,4 +31,6 @@ from .audio_handler import read_audio, \
 
 from .visualizer import plot_signal_in_time, \
     plot_spectrograph, \
-    plot_spectrograph_phase
+    plot_spectrograph_phase, \
+    compare_midi, \
+    plot_spectrogram
