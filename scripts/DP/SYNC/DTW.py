@@ -84,7 +84,6 @@ def create_synced_object(df_original_midi_data, wp, feature_rate, path_midi, pat
     
     return df_warped
 
-
 def dtw_test(show=True):
     #test_audio, Fs = handle.read_audio(os.path.join('..', '..', 'data', 'audio', 'test.wav'))
     #handle.plot_signal_in_time(test_audio, Fs)
