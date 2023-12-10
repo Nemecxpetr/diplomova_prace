@@ -1,6 +1,6 @@
 # Synchronizace symbolického zápisu s hudebními interpretacemi odpovídající skladby
 
-<comment> Score-to-audio synchronization of music interpretations <\comment>
+<comment> Score-to-audio synchronization of music interpretations </comment>
 
 Diplomová práce na téma synchronizace symbolického zápisu s hudebními interpretacemi odpovídající skladby.
 
