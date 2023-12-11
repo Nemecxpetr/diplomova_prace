@@ -11,14 +11,17 @@ import os
 import pandas as pd
 import pretty_midi
 import librosa.display
+import regex
 
+from midiutil import MIDIFile
 from matplotlib import pyplot as plt
 from matplotlib import patches
 from tabulate import tabulate
 
-from libfmp.c1.c1s2_symbolic_rep import visualize_piano_roll
+import libfmp.b.b_plot
+from pretty_midi.utilities import qpm_to_bpm
 
-INITIAL_TEMPO = 60
+INITIAL_TEMPO = 120
 
 def __compare_midi(df_original, df_synced, audio_chroma):
     """Plot two piano-rolls together with the audio interpretation chroma
@@ -28,9 +31,9 @@ def __compare_midi(df_original, df_synced, audio_chroma):
         audio_chroma
     
     """
-    fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(8,5), sharex=False)
+    fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(8,5), sharex=True)
     
-    visualize_piano_roll(csv_to_list(df_original),
+    __visualize_piano_roll(df_to_list(df_original),
                          xlabel='Time (seconds)',
                          ylabel='Chroma pitch',
                          colors='FMP_1',
@@ -40,14 +43,14 @@ def __compare_midi(df_original, df_synced, audio_chroma):
     axs[0].set(title='Original MIDI')     
     axs[0].label_outer()
     
-    visualize_piano_roll(csv_to_list(df_synced),
+    __visualize_piano_roll(df_to_list(df_synced),
                          xlabel='Time (seconds)',
                          ylabel='Chroma pitch',
                          colors='FMP_1',
                          velocity_alpha=True,
                          figsize=(8,5),
                          ax=axs[1])    
-    axs[1].set(title='Synchronized MIDI')    
+    axs[1].set(title='New MIDI')    
     axs[1].label_outer()
 
     fig.tight_layout()
@@ -56,61 +59,156 @@ def __compare_midi(df_original, df_synced, audio_chroma):
         
     return fig, axs
 
+def __visualize_piano_roll(score, xlabel='Time (seconds)', ylabel='Pitch', colors='FMP_1', velocity_alpha=False,
+                         figsize=(12, 4), ax=None, dpi=72):
+    """Plot a pianoroll visualization
+
+    Inspired by: Notebook: C1/C1S2_CSV.ipynb from Meinard Müller
+    Adapted for different score structure
+
+    Args:
+        score: List of note events
+        xlabel: Label for x axis (Default value = 'Time (seconds)')
+        ylabel: Label for y axis (Default value = 'Pitch')
+        colors: Several options: 1. string of FMP_COLORMAPS, 2. string of matplotlib colormap,
+            3. list or np.ndarray of matplotlib color specifications,
+            4. dict that assigns labels  to colors (Default value = 'FMP_1')
+        velocity_alpha: Use the velocity value for the alpha value of the corresponding rectangle
+            (Default value = False)
+        figsize: Width, height in inches (Default value = (12)
+        ax: The Axes instance to plot on (Default value = None)
+        dpi: Dots per inch (Default value = 72)
+
+    Returns:
+        fig: The created matplotlib figure or None if ax was given.
+        ax: The used axes
+    """
+    fig = None
+    if ax is None:
+        fig = plt.figure(figsize=figsize, dpi=dpi)
+        ax = plt.subplot(1, 1, 1)
+
+    # EDIT: The labels are at different position
+    labels_set = sorted(set([note[5] for note in score]))
+    colors = libfmp.b.color_argument_to_dict(colors, labels_set)
+    
+    # EDIT: Also the pitch is somewhere else:
+    pitch_min = min(note[3] for note in score)
+    pitch_max = max(note[3] for note in score)
+    time_min = min(note[0] for note in score)
+    time_max = max(note[0] + note[2] for note in score)
+
+    # The values are not needed but we need to iterate correctly
+    for start, _, duration, pitch, velocity, instr, _, _ in score:
+        if velocity_alpha is False:
+            velocity = None
+        rect = patches.Rectangle((start, pitch - 0.5), duration, 1, linewidth=1,
+                                 # EDIT: expects velocity normalized in interval of 0:1
+                                 edgecolor='k', facecolor=colors[instr], alpha=velocity/128) 
+        ax.add_patch(rect)
+
+    ax.set_ylim([pitch_min - 1.5, pitch_max + 1.5])
+    ax.set_xlim([min(time_min, 0), time_max + 0.5])
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.grid()
+    ax.set_axisbelow(True)
+    ax.legend([patches.Patch(linewidth=1, edgecolor='k', facecolor=colors[key]) for key in labels_set],
+              labels_set, loc='upper right', framealpha=1)
+
+    if fig is not None:
+        plt.tight_layout()
+
+    return fig, ax
+
 def load_midi(fn=os.path.join('..', '..', 'data', 'MIDI', 'test.mid')):
     """Load midi file into the midi_data var
         Args:
             fn (os.path): path to the file to be loaded
                 - default is the test file provided: os.path.join('..', '..', 'data', 'MIDI', 'test.mid')
-
         Returns: 
             midi_data (pretty_midi.PrettyMIDI): loaded midi data
-    """
     
+        #TODO NOTE: this function is basically pointless so could be instead incorporated into other functions
+            
+    """    
     midi_data = pretty_midi.PrettyMIDI(fn)
     return midi_data
 
-def midi_to_list(midi):
-    """Convert a midi file to a list of note events
-        For compensating different tempo the start and duration parameters are recalculated for 120 bpm
+def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
+                 max_duration: int = 10,
+                 debug: bool = False) -> list:
+    """
+    Convert a midi file to a list of note events.
+    Inspired by: Notebook: C1/C1S2_MIDI.ipynb from Meinard Müller
 
     Args:
-        midi (str or pretty_midi.pretty_midi.PrettyMIDI): Either a path to a midi file or PrettyMIDI object
+        midi (str or pretty_midi.pretty_midi.PrettyMIDI):       path to a midi file or PrettyMIDI object
+        debug (bool):                                           if True, additional info is printed
 
     Returns:
-        score (list): A list of note events where each note is specified as
-            ``[start, duration, pitch, velocity, label]``
+        score (list):                                           a list of note events
+                                                                (start, end, duration, pitch, velocity, instr, instr_program, midi_channel)
     """
 
-    if isinstance(midi, str):                                   #check if midi arg is string
+    if isinstance(midi, str):
         midi_data = pretty_midi.pretty_midi.PrettyMIDI(midi)
-    elif isinstance(midi, pretty_midi.pretty_midi.PrettyMIDI):  #check if midi arg is prettyMidi object
+    elif isinstance(midi, pretty_midi.pretty_midi.PrettyMIDI):
         midi_data = midi
     else:
         raise RuntimeError('midi must be a path to a midi file or pretty_midi.PrettyMIDI')
-    
-    # TODO: adjust the start and duration times even if there are tempo changes
-    tempo_changes, tempo = midi_data.get_tempo_changes()
-    
+
     score = []
-        
-    for instrument in midi_data.instruments:
+    midi_channel = 0
+    previous_instr_program = ''
+    offset = 0
+
+    for i, instrument in enumerate(midi_data.instruments):
+        instr = regex.sub(r'[^\p{Latin} ]', u'', instrument.name)
+        instr_program = instrument.program
+
         for note in instrument.notes:
-            t = tempo[0] # get the tempo from the tempo list by getting the index of current tempo change index
-                
-            start = note.start*(t/INITIAL_TEMPO)
-            end = note.end*(t/INITIAL_TEMPO)
-            duration = end - start                
-
+            start = note.start
+            end = note.end
+            duration = note.end - start
+            if duration > max_duration:
+                print(f'Max duration: {duration}, skipping this note.')
+                continue
             pitch = note.pitch
-            velocity = note.velocity / 128.
-            score.append([start, duration, pitch, velocity, instrument.name.lower()])
+            velocity = note.velocity
 
+            start = start - offset
+            end = end - offset
+
+            if i != 0:
+                if previous_instr_program != instr_program:
+                    midi_channel += 1
+                    if midi_channel == 9:
+                        midi_channel = 10
+
+            previous_instr_program = instrument.program
+
+            if 'Drum' in instr:
+                instr = 'Drumset'
+                midi_channel = 9
+
+            if instrument.is_drum:
+                if debug:
+                    print('drums track now')
+                midi_channel = 9
+
+            if debug:
+                print(f'Instrument: {instr}, start: {start}, instr_program: {instr_program}, pitch: {pitch}, duration: {duration}, '
+                      f'velocity: {velocity}, midi_channel: {midi_channel}')
+            score.append([start, end, duration, pitch, velocity, instr, instr_program, midi_channel])
     return score
 
 def list_to_csv(note_list, fn_out=None):
     """Write a list of note events (comprising a start time, duration, pitch, velocity, and label for each note event)
     to a CSV file
 
+    Inspired by: Notebook: C1/C1S2_MIDI.ipynb from Meinard Müller
+    
     Args:
         score (list): List of note events
         fn_out (str): The path of the csv file to be created
@@ -118,8 +216,10 @@ def list_to_csv(note_list, fn_out=None):
     Returns: 
         df (pd.DataFrame): data frame with the information saved to csv
     """
-    df = pd.DataFrame(note_list, columns=['start', 'duration', 'pitch', 'velocity', 'instrument'])
-    # ideally, I would like to use float_format='%.3f', but then the numeric columns are considered as strings and,
+    df = pd.DataFrame(note_list,  columns=['start', 'end', 'duration', 'pitch',
+                                            'velocity', 'instrument', 'instr_program', 'midi_channel'])
+  
+    # NOTE: ideally, I would like to use float_format='%.3f', but then the numeric columns are considered as strings and,
     # therefore, are quoted
     if fn_out is not None:  df.to_csv(fn_out, sep=';', index=False, quoting=2)
 
@@ -143,8 +243,8 @@ def read_csv(fn, header=True, add_label=False):
         df = df.assign(label=[add_label] * len(df.index))
     return df
 
-def csv_to_list(csv):
-    """Convert a csv score file to a list of note events
+def df_to_list(csv : str or pd.DataFrame):
+    """Convert a data frame score file to a list of note events
 
     Notebook: C1/C1S2_CSV.ipynb
 
@@ -153,7 +253,7 @@ def csv_to_list(csv):
 
     Returns:
         score (list): A list of note events where each note is specified as
-            ``[start, duration, pitch, velocity, label]``
+            ``[start, end, duration, pitch, velocity, instr, instr_program, midi_channel]``
     """
 
     if isinstance(csv, str):
@@ -164,87 +264,98 @@ def csv_to_list(csv):
         raise RuntimeError('csv must be a path to a csv file or pd.DataFrame')
 
     score = []
-    for i, (start, duration, pitch, velocity, label) in df.iterrows():
-        score.append([start, duration, pitch, velocity, label])
+    for i, (start, end, duration, pitch, velocity, instr, instr_program, midi_channel) in df.iterrows():
+        score.append([start, end, duration, pitch, velocity, instr, instr_program, midi_channel])
     return score
 
-def csv_to_midi(csv, fn_out):
-    """Convert a csv to midi file
-
-    Args: 
-        csv (str or pd.DataFrame): Either a path to a csv file or a data frame with note information
-        fn_out (str): The path of the midi file to be created (including ../name.mid)
-
-    Returns: 
-        midi_out (pretty_midi.PrettyMIDI()): a pretty midi object 
+def convert_seconds_to_quarter(seconds : float,
+                               bpm : float):
+    """Converts seconds to quaters with set bpm in 4/4
+    
+    # NOTE: pretty midi has function qpm_to_bpm that does opposite to this?
+    
+    Args: seconds (float) : time in seconds
+          bpm (float) : tempo in beats per minute
+    Return: 
+        qpm (float) : quaters per minute
     """
+    return seconds * (4 / (bpm/60))
 
-    # First load the CSV file as data frame
+def create_midi_from_csv_experimental(path_output_file: str,
+                                      csv: str or pd.DataFrame,
+                                      bpm: int = 120,
+                                      debug: bool = False):
     if isinstance(csv, str):
-        df = pd.read_csv(csv, sep=';', keep_default_na=False)
+        df_csv = pd.read_csv(csv)
     elif isinstance(csv, pd.DataFrame):
-        df = csv
+        df_csv = csv
     else:
         raise RuntimeError('csv must be a path to a csv file or pd.DataFrame')
+    
+    unique_instruments = df_csv['midi_channel'].unique()
+    my_midi_file = MIDIFile(len(unique_instruments), adjust_origin=False)
+    if debug:
+        print(f'Unique instruments: {unique_instruments}')
 
-    # Create a PrettyMIDI object
-    midi_out = pretty_midi.PrettyMIDI(initial_tempo=INITIAL_TEMPO)
+    previous_track = None
+    for i, row in df_csv.iterrows():
 
-    # Create a dictionary to keep track of instruments by name
-    instruments = {}
-
-    # Iterate over the rows of the DataFrame and add MIDI information to midi_out
-    for _, row in df.iterrows():
-        start_time = float(row['start'])
-        #end_time = float(row['end'])
-        duration = float(row['duration'])
+        channel = int(row['midi_channel'])
+        instr_program = int(row['instr_program'])
         pitch = int(row['pitch'])
-        velocity = int(row['velocity']*128)
-        try:
-            instrument_name = row['instrument']
-            instrument_id = pretty_midi.instrument_name_to_program(instrument_name)
-        except ValueError:
-            print('Not a valid instrument name - instrument set to piano')
-            instrument_id = 1
 
-        # Check if the instrument already exists
-        if instrument_name in instruments:
-            instrument = instruments[instrument_name]
+        track = 0
+        if track != previous_track:
+            my_midi_file.addTempo(track=track, time=0, tempo=bpm)
+        previous_track = track
+
+        if i == 0:
+            my_midi_file.addProgramChange(0, channel, 0, instr_program)
         else:
-            # Create a new Instrument object for the note
-            instrument = pretty_midi.Instrument(program=instrument_id)
-            instruments[instrument_name] = instrument
+            if previous_channel != channel:
+                my_midi_file.addProgramChange(0, channel, 0, instr_program)
 
-        # Create a Note object with the extracted MIDI information
-        note = pretty_midi.Note(
-            velocity=velocity,
-            pitch=pitch,
-            start=start_time,
-            end = start_time + duration
-        )
+        if debug:
+            print(
+                f"Note {pitch}, start at {convert_seconds_to_quarter(row['start'], bpm)} and duration "
+                f"{convert_seconds_to_quarter(row['duration'], bpm)}, bpm: {bpm}, volume: {row['velocity']}, "
+                f"instr program: {instr_program}, channel: {channel}, track: {track}")
 
-        # Add the note to the instrument
-        instrument.notes.append(note)
+        my_midi_file.addNote(track=track, channel=channel, time=convert_seconds_to_quarter(row['start'], bpm),
+                             pitch=pitch, volume=int(row['velocity']),
+                             duration=convert_seconds_to_quarter(row['duration'], bpm))
+        previous_channel = channel
 
-    # Add the instruments to the PrettyMIDI object
-    for instrument in instruments.values():
-        midi_out.instruments.append(instrument)
-
-    # Write out the MIDI data
-    midi_out.write(fn_out)
-
-    return midi_out
-
-def load_midi_as_df(fn):
-    """ Loads MIDI file at specified path
-    converts to a list
-    Recalculates all times for one single tempo (INITIAL_TEMPO = 120)
-    Args:
-        fn(path): path to midi file
-    Returns:
-        (pd.DataFrame ): converted midi 
+    # create and save the midi file itself
+    with open(f'{path_output_file}', "wb") as output_file:
+        my_midi_file.writeFile(output_file)
+   
+def midi_to_csv(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
+                csv_path: str,
+                debug: bool = False):
     """
-    return list_to_csv(midi_to_list(load_midi(fn)))
+    Convert a midi file to a csv file and save it.
+
+    Args:
+        midi_path:          path of the input .mid file or the data of midi file
+        csv_path:           path of the output .csv
+        debug:              if True, additional info is printed
+    """
+    
+    if isinstance(midi, str):
+        midi_data = pretty_midi.pretty_midi.PrettyMIDI(midi)
+    elif isinstance(midi, pretty_midi.pretty_midi.PrettyMIDI):
+        midi_data = midi
+    else:
+        raise RuntimeError('midi must be a path to a midi file or pretty_midi.PrettyMIDI')
+   
+    score = midi_to_list(midi_data, debug=debug)
+    final_df = pd.DataFrame(score, columns=['start', 'end', 'duration', 'pitch',
+                                            'velocity', 'instrument', 'instr_program', 'midi_channel'])
+    
+    if csv_path is not None:    final_df.to_csv(csv_path, index=False)
+    
+    return final_df
 
 # TODO: try different aproach with changing the original midi instead of creating a completely new midi from csv
 def midi_and_csv_to_midi(pm_original_midi, df_warped, fn_out):
@@ -255,32 +366,27 @@ def midi_and_csv_to_midi(pm_original_midi, df_warped, fn_out):
     return pm_new_midi
     
 
-
 # Testing functions for optimizing the MIDI handler functions
-def test():
-    print('First lets check the loading of midi data: ')
-    midi_data = load_midi(fn=os.path.join('..', '..', 'data', 'MIDI', 'test.mid'))
-    score = midi_to_list(midi_data)
-
-    print(score)
-
-    print(tabulate(score, headers=['start', 'duration', 'pitch', 'velocity', 'instrument name']))
-    print('')
-
-    print('Now lets generate csv file from this list')
-    print('')
-
+def test(debug=False):
+    input_midi_path = os.path.join('..', '..', 'data', 'MIDI', 'test_80bpm.mid')
+    midi_data = load_midi(fn=input_midi_path)
     path_csv = os.path.join('..', '..', 'data','CSV', 'test.csv')
-    original = list_to_csv(score, path_csv)
 
+    output_midi_path= os.path.join('..', '..', 'data', 'MIDI', 'from_csv','test.mid')
 
-    print('We can also create a midi back from the csv file - even though there are some problems and it won_t be the same')
-
-    path_midi= os.path.join('..', '..', 'data', 'MIDI', 'from_csv','test.mid')
-    csv_to_midi(path_csv, path_midi)
-    new_midi = load_midi_as_df(path_midi)
-
-    __compare_midi(original, new_midi, None)
+    df_new = midi_to_csv(midi=midi_data, csv_path=path_csv, debug=debug)
+    print('Original midi data - returned by function midi_to_list')
+    print(tabulate(midi_to_list(midi_data), headers=['start', 'end', 'duration', 'pitch', 'velocity', 'instr', 'instr_program', 'midi_channel']))
+    
+    create_midi_from_csv_experimental(path_output_file=output_midi_path, csv=df_new, bpm=INITIAL_TEMPO, debug=debug)
+    
+    new_midi = load_midi(fn=output_midi_path)
+    print('New midi data loaded from csv')
+    print(tabulate(midi_to_list(new_midi), headers=['start', 'end', 'duration', 'pitch', 'velocity', 'instr', 'instr_program', 'midi_channel']))   
+    print('')
+    print('Note that the original and new data are not sorted the same way')
+    
+    __compare_midi(midi_to_csv(input_midi_path, csv_path=None, debug=debug), midi_to_csv(output_midi_path, csv_path=None, debug=debug), None)
     plt.show()
 
     
@@ -313,12 +419,12 @@ def test_tempo():
     csv = list_to_csv(score, path_csv)
 
     path_midi = os.path.join('..', '..', 'data', 'MIDI','from_csv', 'test_tempo.mid')
-    new_midi = csv_to_midi(csv, path_midi)
+    new_midi = create_midi_from_csv_experimental(csv, path_midi)
 
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 8))
-    visualize_piano_roll(midi_to_list(md), velocity_alpha=True, ax=ax[0])
+    __visualize_piano_roll(midi_to_list(md), velocity_alpha=True, ax=ax[0])
     ax[0].set(title='Original MIDI')
-    visualize_piano_roll(midi_to_list(new_midi), velocity_alpha=True, ax=ax[1])
+    __visualize_piano_roll(midi_to_list(new_midi), velocity_alpha=True, ax=ax[1])
     ax[1].set(title='MIDI from CSV')
     fig.tight_layout()
     

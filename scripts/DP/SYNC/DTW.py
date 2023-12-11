@@ -72,51 +72,54 @@ def create_synced_object(df_original_midi_data, wp, feature_rate, path_midi, pat
     # then find new values for midi notes (original time values in the csv_from_midi object)
 
     df_warped = df_annotated.copy(deep=True)
-    df_warped["end"] = df_warped["start"] + df_warped["duration"]
+    # since we added end to the default data frame this is unnecessary
+    #df_warped["end"] = df_warped["start"] + df_warped["duration"]
     df_warped[['start', 'end']] = scipy.interpolate.interp1d(wp[1] / feature_rate, 
                                wp[0] / feature_rate, kind='linear', fill_value="extrapolate")(df_annotated[['start', 'end']])
     df_warped["duration"] = df_warped["end"] - df_warped["start"]
-    note_list = df_warped[['start', 'end', 'duration', 'pitch', 'velocity', 'instrument']].values.tolist()
-
     
-    synced_csv = handle.list_to_csv(note_list, path_csv)  
-    synced_midi = handle.csv_to_midi(df_warped, path_midi)
+    handle.MIDI_handler.create_midi_from_csv_experimental(path_output_file=path_midi,csv=df_warped)
+    handle.MIDI_handler.midi_to_csv(path_midi, path_csv)
     
     return df_warped
 
-def dtw_test(show=True):
+def dtw_test(show=False):
     #test_audio, Fs = handle.read_audio(os.path.join('..', '..', 'data', 'audio', 'test.wav'))
     #handle.plot_signal_in_time(test_audio, Fs)
 
     # This settings showed to be crucial!!
     Fs = 48000
     N = 4096
-    H = N//16
+    H = N//24
     fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test.wav')
     # TODO: is this correct?
     feature_rate = Fs/H
 
+    # Load audio
     x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
+    # export it to chroma representation
     chroma_audio = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
 
+    # Load midi and export it to chroma representation
     path_midi =os.path.join('..', '..', 'data', 'MIDI', 'dtw_test.mid')
-    
-    df_midi = handle.load_midi_as_df(path_midi)
+    path_csv = os.path.join('..', '..', 'data', 'CSV', 'dtw_test.csv')
+    df_midi = handle.midi_to_csv(midi=path_midi, csv_path=path_csv)
     f_pitch = df_to_pitch_features(df_midi, feature_rate=feature_rate)
     f_chroma = pitch_to_chroma(f_pitch=f_pitch)
     #f_chroma_quantized = quantize_chroma(f_chroma=f_chroma)
     chroma_midi = f_chroma
 
+    # show the audio and midi chroma representations
     if show:
         fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10, 6), sharex=False)
         img = librosa.display.specshow(chroma_audio, x_axis='frames', y_axis='chroma', cmap='gray_r', hop_length=H, ax=ax[0])
-        ax[0].set(title='Sequence $X$')    
+        ax[0].set(title='Audio chroma representation')    
         ax[0].set_xlabel('Time (frames)')
         ax[0].set_ylabel('Chroma')  
         ax[0].label_outer()
 
         librosa.display.specshow(chroma_midi, x_axis='frames', y_axis='chroma', cmap='gray_r', ax=ax[1])
-        ax[1].set(title='Sequence $Y$')
+        ax[1].set(title='MIDI chroma representation')
         ax[1].set_xlabel('Time (frames)')
         ax[1].set_ylabel('Chroma')
         ax[0].label_outer()
@@ -124,41 +127,65 @@ def dtw_test(show=True):
         fig.colorbar(img, ax=ax)
         plt.show()
 
+    # compute optimal warping path
     wp = warping_path(chroma_audio, chroma_midi, feature_rate=feature_rate, show=show)
-    midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced.mid')    
-    csv_path = os.path.join('..', '..', 'data', 'CSV',  'dtw_test_synced.csv')    
-    synced_midi = create_synced_object(df_midi, wp, feature_rate=feature_rate, path_midi = midi_path, path_csv = csv_path)
+    # create synchronized midi with the computed warping path
+    new_midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced.mid')    
+    new_csv_path = os.path.join('..', '..', 'data', 'CSV',  'dtw_test_synced.csv')    
+    synced_midi = create_synced_object(df_midi, wp, feature_rate=feature_rate, path_midi = new_midi_path, path_csv = new_csv_path)
+    # Compare the original midi with the new midi and audio representation
+    handle.compare_midi(df_midi, synced_midi, audio_chroma=chroma_audio, audio_hop=H)
     
-    # Trying with different files:
-    different_files = False
+    different_files= True
     if different_files:
-        fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test.wav')
+        # Load different audio 
+        fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test_voice.wav')
         x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
+        # export it to chroma
         X_whistle = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
-        wp_whistle = warping_path(X_whistle, chroma_midi, feature_rate=feature_rate, show=show)
+        # compute optimal wp
+        wp_piano = warping_path(X_whistle, chroma_midi, feature_rate=feature_rate, show=show)
+        # create synced object
+        midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_voice.mid')    
+        csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_voice.csv')    
+        synced_midi=create_synced_object(df_midi, wp_piano, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
+        # compare 
+        handle.compare_midi(df_midi, synced_midi, audio_chroma=chroma_audio, audio_hop=H)    
 
-        midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_ms_piano.mid')    
-        csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_ms_piano.csv')    
-        create_synced_object(df_midi, wp_whistle, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
-    
+        # Load different audio 
         fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test_voice_eq.wav')
         x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
+        # export it to chroma
         X_whistle = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
-        wp_whistle = warping_path(X_whistle, chroma_midi,feature_rate=feature_rate, show=show)
-
+        # compute optimal wp
+        wp_voice = warping_path(X_whistle, chroma_midi,feature_rate=feature_rate, show=show)
         midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_voice_eq.mid')    
         csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_voice_eq.csv')    
-        synced_midi = create_synced_object(df_midi, wp_whistle, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
-
-    # TODO: create compare midi function that will plot piano roll of original and new midi
-    handle.compare_midi(synced_midi, df_midi, audio_chroma=None)
+        # create synced object
+        synced_midi=create_synced_object(df_midi, wp_voice, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
+        # compare 
+        handle.compare_midi(df_midi, synced_midi, audio_chroma=chroma_audio, audio_hop=H)
+        
+        # Load different audio 
+        fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test_voice_slow.wav')
+        x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
+        # export it to chroma
+        X_whistle = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
+        # compute optimal wp
+        wp_voice = warping_path(X_whistle, chroma_midi,feature_rate=feature_rate, show=show)
+        midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'test_synced_with_slow_voice.mid')    
+        csv_path = os.path.join('..', '..', 'data', 'CSV', 'test_synced_with_slow_voice.csv')    
+        # create synced object
+        synced_midi=create_synced_object(df_midi, wp_voice, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
+        # compare 
+        handle.compare_midi(df_midi, synced_midi, audio_chroma=chroma_audio, audio_hop=H)
+    
+    
 
     # question how to adjust if more tones that originally start at the same time are now all different? How does the warping path reflect that?
     # Now that I think musically about it how would I even align that as a human listener? so I guess it doesn't really matter. If it picks the best match (The WP with least cost)
     # It should probably work
 
-
-dtw_test(show=True)
 
 # test that midi laoded and then saved back doesnť change the midi:
 #handle.MIDI_handler.test()

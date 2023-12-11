@@ -7,15 +7,18 @@ Some functions were taken from or inspired by the FMP Notebooks (https://www.aud
 """
 
 from math import log10
+from libfmp.b import plot_chromagram
 from matplotlib.figure import figaspect
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import patches
 import librosa
 
+import libfmp
 from libfmp.c1.c1s2_symbolic_rep import visualize_piano_roll
 from libfmp.b.b_plot import plot_matrix 
-from Handler.MIDI_handler import csv_to_list
+from Handler.MIDI_handler import df_to_list
 
 import soundfile as sf
 
@@ -91,8 +94,69 @@ def plot_spectrograph_phase(x, Fs):
     plt.xlim([20, Fs/2])
     plt.show()
     
+def visualize_piano_roll(score, xlabel='Time (seconds)', ylabel='Pitch', colors='FMP_1', velocity_alpha=False,
+                         figsize=(12, 4), ax=None, dpi=72):
+    """Plot a pianoroll visualization
 
-def compare_midi(df_original, df_synced, audio_chroma):
+    Inspired by: Notebook: C1/C1S2_CSV.ipynb from Meinard Mueller
+    Adapted for different score structure
+
+    Args:
+        score: List of note events
+        xlabel: Label for x axis (Default value = 'Time (seconds)')
+        ylabel: Label for y axis (Default value = 'Pitch')
+        colors: Several options: 1. string of FMP_COLORMAPS, 2. string of matplotlib colormap,
+            3. list or np.ndarray of matplotlib color specifications,
+            4. dict that assigns labels  to colors (Default value = 'FMP_1')
+        velocity_alpha: Use the velocity value for the alpha value of the corresponding rectangle
+            (Default value = False)
+        figsize: Width, height in inches (Default value = (12)
+        ax: The Axes instance to plot on (Default value = None)
+        dpi: Dots per inch (Default value = 72)
+
+    Returns:
+        fig: The created matplotlib figure or None if ax was given.
+        ax: The used axes
+    """
+    fig = None
+    if ax is None:
+        fig = plt.figure(figsize=figsize, dpi=dpi)
+        ax = plt.subplot(1, 1, 1)
+
+    # EDIT: The labels are at different position
+    labels_set = sorted(set([note[5] for note in score]))
+    colors = libfmp.b.color_argument_to_dict(colors, labels_set)
+    
+    # EDIT: Also the pitch is somewhere else:
+    pitch_min = min(note[3] for note in score)
+    pitch_max = max(note[3] for note in score)
+    time_min = min(note[0] for note in score)
+    time_max = max(note[0] + note[2] for note in score)
+
+    # The values are not needed but we need to iterate correctly
+    for start, _, duration, pitch, velocity, instr, _, _ in score:
+        if velocity_alpha is False:
+            velocity = None
+        rect = patches.Rectangle((start, pitch - 0.5), duration, 1, linewidth=1,
+                                 # EDIT: expects velocity normalized in interval of 0:1
+                                 edgecolor='k', facecolor=colors[instr], alpha=velocity/128) 
+        ax.add_patch(rect)
+
+    ax.set_ylim([pitch_min - 1.5, pitch_max + 1.5])
+    ax.set_xlim([min(time_min, 0), time_max + 0.5])
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.grid()
+    ax.set_axisbelow(True)
+    ax.legend([patches.Patch(linewidth=1, edgecolor='k', facecolor=colors[key]) for key in labels_set],
+              labels_set, loc='upper right', framealpha=1)
+
+    if fig is not None:
+        plt.tight_layout()
+
+    return fig, ax
+
+def compare_midi(df_original, df_synced, audio_chroma, audio_hop):
     """Plot two piano-rolls together with the audio interpretation chroma
     Args:
         df_original
@@ -100,11 +164,14 @@ def compare_midi(df_original, df_synced, audio_chroma):
         audio_chroma
     
     """
-    fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(8,5), sharex=False)
+    if audio_chroma is not None: rows = 3 
+    else: rows = 2 
     
-    visualize_piano_roll(csv_to_list(df_original),
+    fig, axs = plt.subplots(nrows=rows, ncols=1, figsize=(8,2.5*rows), sharex=True)
+    
+    visualize_piano_roll(df_to_list(df_original),
                          xlabel='Time (seconds)',
-                         ylabel='Chroma pitch',
+                         ylabel='MIDI pitch',
                          colors='FMP_1',
                          velocity_alpha=True,
                          figsize=(8,5),
@@ -112,15 +179,23 @@ def compare_midi(df_original, df_synced, audio_chroma):
     axs[0].set(title='Original MIDI')     
     axs[0].label_outer()
     
-    visualize_piano_roll(csv_to_list(df_synced),
+    visualize_piano_roll(df_to_list(df_synced),
                          xlabel='Time (seconds)',
-                         ylabel='Chroma pitch',
+                         ylabel='MIDI pitch',
                          colors='FMP_1',
                          velocity_alpha=True,
                          figsize=(8,5),
                          ax=axs[1])    
     axs[1].set(title='Synchronized MIDI')    
     axs[1].label_outer()
+    
+    if audio_chroma is not None:
+    
+        img = librosa.display.specshow(audio_chroma, x_axis='s', y_axis='chroma', cmap='gray_r', hop_length=audio_hop, ax=axs[2])
+        axs[2].set(title='Original audio chroma features')    
+        axs[2].set_xlabel('Time (seconds)')
+        axs[2].set_ylabel('Chroma')  
+        axs[2].label_outer()
 
     fig.tight_layout()
     

@@ -15,16 +15,14 @@ Some functions were taken from or inspired by the FMP Notebooks (https://www.aud
 This package is part of my master's thesis (https://github.com/Nemecxpetr/diplomova_prace)
 """
 # MIDI handler functions to create midi and convert it to csv and back
-from .MIDI_handler import load_midi, \
+from .MIDI_handler import load_midi,\
     midi_to_list, \
     list_to_csv, \
-    read_csv, \
-    csv_to_list, \
-    csv_to_midi, \
-    load_midi_as_df, \
-    test, \
-    test_tempo
-
+    read_csv ,\
+    create_midi_from_csv_experimental, \
+    midi_to_csv,\
+    df_to_list,\
+    test
 
 from .audio_handler import read_audio, \
     write_audio
