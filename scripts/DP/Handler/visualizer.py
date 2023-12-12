@@ -14,6 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import patches
 import librosa
+import pandas as pd
 
 import libfmp
 from libfmp.c1.c1s2_symbolic_rep import visualize_piano_roll
@@ -156,7 +157,14 @@ def visualize_piano_roll(score, xlabel='Time (seconds)', ylabel='Pitch', colors=
 
     return fig, ax
 
-def compare_midi(df_original, df_synced, audio_chroma, audio_hop):
+def compare_midi(df_original : pd.DataFrame, 
+                 df_synced : pd.DataFrame, 
+                 audio_chroma = None, 
+                 audio_hop=None,
+                 title_original_midi  : str = 'Original MIDI',
+                 title_new_midi : str = 'New MIDI' ,
+                 title_audio : str = 'Original audio chroma features'):
+
     """Plot two piano-rolls together with the audio interpretation chroma
     Args:
         df_original
@@ -176,7 +184,7 @@ def compare_midi(df_original, df_synced, audio_chroma, audio_hop):
                          velocity_alpha=True,
                          figsize=(8,5),
                          ax=axs[0])    
-    axs[0].set(title='Original MIDI')     
+    axs[0].set(title=title_original_midi)     
     axs[0].label_outer()
     
     visualize_piano_roll(df_to_list(df_synced),
@@ -186,13 +194,13 @@ def compare_midi(df_original, df_synced, audio_chroma, audio_hop):
                          velocity_alpha=True,
                          figsize=(8,5),
                          ax=axs[1])    
-    axs[1].set(title='Synchronized MIDI')    
+    axs[1].set(title=title_new_midi)    
     axs[1].label_outer()
     
     if audio_chroma is not None:
     
         img = librosa.display.specshow(audio_chroma, x_axis='s', y_axis='chroma', cmap='gray_r', hop_length=audio_hop, ax=axs[2])
-        axs[2].set(title='Original audio chroma features')    
+        axs[2].set(title=title_audio)    
         axs[2].set_xlabel('Time (seconds)')
         axs[2].set_ylabel('Chroma')  
         axs[2].label_outer()

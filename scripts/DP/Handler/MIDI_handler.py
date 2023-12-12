@@ -8,6 +8,7 @@ Some functions were taken from or inspired by the FMP Notebooks (https://www.aud
 
 from copy import deepcopy
 import os
+from tkinter import N
 import pandas as pd
 import pretty_midi
 import librosa.display
@@ -23,7 +24,9 @@ from pretty_midi.utilities import qpm_to_bpm
 
 INITIAL_TEMPO = 120
 
-def __compare_midi(df_original, df_synced, audio_chroma):
+def __compare_midi(df_original : pd.DataFrame,
+                   df_synced : pd.DataFrame,
+                   audio_chroma = None):
     """Plot two piano-rolls together with the audio interpretation chroma
     Args:
         df_original
@@ -167,10 +170,13 @@ def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
         instr = regex.sub(r'[^\p{Latin} ]', u'', instrument.name)
         instr_program = instrument.program
 
+        #TODO NOTE: Adding round for visualisation in the thesis
+        # measure to be deleted or accesed by some print_thesis command or smth
+        ndigits = 3
         for note in instrument.notes:
-            start = note.start
-            end = note.end
-            duration = note.end - start
+            start = round(note.start, ndigits)
+            end = round(note.end, ndigits)
+            duration = round(note.end - start, ndigits)
             if duration > max_duration:
                 print(f'Max duration: {duration}, skipping this note.')
                 continue
@@ -225,7 +231,7 @@ def list_to_csv(note_list, fn_out=None):
 
     return df
 
-def read_csv(fn, header=True, add_label=False):
+def read_csv(fn : str or os.path, separator : str = ';', header=True, add_label=False):
     """Read a CSV file in table format and creates a pd.DataFrame from it, with observations in the
     rows and variables in the columns.
 
@@ -237,7 +243,7 @@ def read_csv(fn, header=True, add_label=False):
     Returns:
         df (pd.DataFrame): Pandas DataFrame
     """
-    df = pd.read_csv(fn, sep=';', keep_default_na=False, header=0 if header else None)
+    df = pd.read_csv(fn, sep=separator, keep_default_na=False, header=0 if header else None)
     if add_label:
         assert 'label' not in df.columns, 'Label column must not exist if `add_label` is True'
         df = df.assign(label=[add_label] * len(df.index))
@@ -273,6 +279,7 @@ def convert_seconds_to_quarter(seconds : float,
     """Converts seconds to quaters with set bpm in 4/4
     
     # NOTE: pretty midi has function qpm_to_bpm that does opposite to this?
+    # TODO: will this work with songs in different measures? like 6/12, 3/4, 5/4, 7/4, etc. ...??
     
     Args: seconds (float) : time in seconds
           bpm (float) : tempo in beats per minute
@@ -292,7 +299,7 @@ def create_midi_from_csv_experimental(path_output_file: str,
     else:
         raise RuntimeError('csv must be a path to a csv file or pd.DataFrame')
     
-    unique_instruments = df_csv['midi_channel'].unique()
+    unique_instruments = df_csv['midi channel'].unique()
     my_midi_file = MIDIFile(len(unique_instruments), adjust_origin=False)
     if debug:
         print(f'Unique instruments: {unique_instruments}')
@@ -300,8 +307,8 @@ def create_midi_from_csv_experimental(path_output_file: str,
     previous_track = None
     for i, row in df_csv.iterrows():
 
-        channel = int(row['midi_channel'])
-        instr_program = int(row['instr_program'])
+        channel = int(row['midi channel'])
+        instr_program = int(row['instr program'])
         pitch = int(row['pitch'])
 
         track = 0
@@ -351,7 +358,7 @@ def midi_to_csv(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
    
     score = midi_to_list(midi_data, debug=debug)
     final_df = pd.DataFrame(score, columns=['start', 'end', 'duration', 'pitch',
-                                            'velocity', 'instrument', 'instr_program', 'midi_channel'])
+                                            'velocity', 'instrument', 'instr program', 'midi channel'])
     
     if csv_path is not None:    final_df.to_csv(csv_path, index=False)
     
@@ -368,9 +375,9 @@ def midi_and_csv_to_midi(pm_original_midi, df_warped, fn_out):
 
 # Testing functions for optimizing the MIDI handler functions
 def test(debug=False):
-    input_midi_path = os.path.join('..', '..', 'data', 'MIDI', 'test_80bpm.mid')
+    input_midi_path = os.path.join('..', '..', 'data', 'MIDI', 'test_100bpm.mid')
     midi_data = load_midi(fn=input_midi_path)
-    path_csv = os.path.join('..', '..', 'data','CSV', 'test.csv')
+    path_csv = os.path.join('..', '..', 'data','CSV', 'test_100bpm.csv')
 
     output_midi_path= os.path.join('..', '..', 'data', 'MIDI', 'from_csv','test.mid')
 

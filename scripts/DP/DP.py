@@ -33,4 +33,13 @@ import os
 
 #handle.MIDI_handler.test()
 
-dtw_test(show=False)
+#dtw_test(show=False)
+
+
+path_csv_100 = os.path.join('..', '..', 'data','CSV', 'test_100bpm.csv')
+path_csv_80 = os.path.join('..', '..', 'data','CSV', 'test_80bpm.csv')
+
+df_80bpm = handle.MIDI_handler.read_csv(path_csv_80, separator=',')
+df_100bpm = handle.MIDI_handler.read_csv(path_csv_100, separator=',')
+
+handle.visualizer.compare_midi(df_80bpm, df_100bpm, title_original_midi='MIDI 80 BPM', title_new_midi='MIDI 100 BPM')

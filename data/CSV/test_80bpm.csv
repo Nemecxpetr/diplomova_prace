@@ -1,4 +1,4 @@
-start,end,duration,pitch,velocity,instrument,instr_program,midi_channel
+start,end,duration,pitch,velocity,instrument,instr program,midi channel
 0.0,0.748,0.748,71,49,Flute,73,0
 0.75,1.123,0.373,71,49,Flute,73,0
 1.125,1.498,0.373,69,49,Flute,73,0
