@@ -89,8 +89,8 @@ def dtw_test(show=False):
 
     # This settings showed to be crucial!!
     Fs = 48000
-    N = 4096
-    H = N//24
+    N = 2048
+    H = N//16
     fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test.wav')
     # TODO: is this correct?
     feature_rate = Fs/H
@@ -138,16 +138,17 @@ def dtw_test(show=False):
     
     different_files= True
     if different_files:
+        #TODO: create function doing this whole process:
         # Load different audio 
-        fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test_voice.wav')
+        fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test_whistle.wav')
         x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
         # export it to chroma
         X_whistle = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
         # compute optimal wp
         wp_piano = warping_path(X_whistle, chroma_midi, feature_rate=feature_rate, show=show)
         # create synced object
-        midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_voice.mid')    
-        csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_voice.csv')    
+        midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_whistle.mid')    
+        csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_whistle.csv')    
         synced_midi=create_synced_object(df_midi, wp_piano, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
         # compare 
         handle.compare_midi(df_midi, synced_midi, audio_chroma=chroma_audio, audio_hop=H)    
