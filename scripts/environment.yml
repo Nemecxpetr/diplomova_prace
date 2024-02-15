@@ -10,6 +10,7 @@ dependencies:
   - argon2-cffi-bindings=21.2.0=py38h2bbff1b_0
   - asttokens=2.0.5=pyhd3eb1b0_0
   - attrs=23.1.0=py38haa95532_0
+  - audioread=3.0.1=py38haa244fe_1
   - babel=2.11.0=py38haa95532_0
   - backcall=0.2.0=pyhd3eb1b0_0
   - beautifulsoup4=4.12.2=py38haa95532_0
@@ -19,8 +20,8 @@ dependencies:
   - brotli=1.0.9=h2bbff1b_7
   - brotli-bin=1.0.9=h2bbff1b_7
   - brotlipy=0.7.0=py38h2bbff1b_1003
-  - ca-certificates=2023.08.22=haa95532_0
-  - certifi=2023.7.22=py38haa95532_0
+  - ca-certificates=2023.7.22=h56e8100_0
+  - certifi=2023.7.22=pyhd8ed1ab_0
   - cffi=1.15.1=py38h2bbff1b_3
   - charset-normalizer=2.0.4=pyhd3eb1b0_0
   - colorama=0.4.6=py38haa95532_0
@@ -46,7 +47,6 @@ dependencies:
   - importlib_resources=5.2.0=pyhd3eb1b0_1
   - intel-openmp=2023.1.0=h59b6b97_46319
   - ipykernel=6.25.0=py38h9909e9c_0
-  - ipython=8.12.2=py38haa95532_0
   - ipython_genutils=0.2.0=pyhd3eb1b0_1
   - ipywidgets=8.0.4=py38haa95532_0
   - jedi=0.18.1=py38haa95532_1
@@ -75,6 +75,8 @@ dependencies:
   - jupyterlab_widgets=3.0.5=py38haa95532_0
   - kiwisolver=1.4.4=py38hd77b12b_0
   - krb5=1.20.1=h5b6d351_0
+  - lame=3.100=hcfcfb64_1003
+  - lazy_loader=0.3=pyhd8ed1ab_0
   - lerc=3.0=hd77b12b_0
   - libbrotlicommon=1.0.9=h2bbff1b_7
   - libbrotlidec=1.0.9=h2bbff1b_7
@@ -83,11 +85,16 @@ dependencies:
   - libclang13=14.0.6=default_h8e68704_1
   - libdeflate=1.17=h2bbff1b_1
   - libffi=3.4.4=hd77b12b_0
+  - libflac=1.4.3=h63175ca_0
   - libiconv=1.16=h2bbff1b_2
+  - libogg=1.3.4=h8ffe710_1
+  - libopus=1.3.1=h8ffe710_1
   - libpng=1.6.39=h8cc25b3_0
   - libpq=12.15=h906ac69_1
+  - libsndfile=1.2.2=h81429f1_1
   - libsodium=1.0.18=h62dcd97_0
   - libtiff=4.5.1=hd77b12b_0
+  - libvorbis=1.3.7=h0e60522_0
   - libwebp=1.3.2=hbc33d0d_0
   - libwebp-base=1.3.2=h2bbff1b_0
   - libxml2=2.10.4=h0ad7f3c_1
@@ -104,6 +111,8 @@ dependencies:
   - mkl-service=2.4.0=py38h2bbff1b_1
   - mkl_fft=1.3.8=py38h2bbff1b_0
   - mkl_random=1.2.4=py38h59b6b97_0
+  - mpg123=1.32.3=h63175ca_0
+  - msgpack-python=1.0.6=py38hb1fd069_0
   - munkres=1.1.4=py_0
   - nbclassic=0.5.5=py38haa95532_0
   - nbclient=0.5.13=py38haa95532_0
@@ -112,14 +121,12 @@ dependencies:
   - nest-asyncio=1.5.6=py38haa95532_0
   - notebook=6.5.4=py38haa95532_1
   - notebook-shim=0.2.2=py38haa95532_0
-  - numba=0.58.0=py38h4ed8f06_0
   - numexpr=2.8.4=py38h7b80656_1
   - numpy=1.24.3=py38h79a8e48_1
   - numpy-base=1.24.3=py38h8a87ada_1
   - openjpeg=2.4.0=h4fc8c34_0
-  - openssl=3.0.11=h2bbff1b_2
+  - openssl=3.1.4=hcfcfb64_0
   - packaging=23.1=py38haa95532_0
-  - pandas=2.0.3=py38h4ed8f06_0
   - pandocfilters=1.5.0=pyhd3eb1b0_0
   - parso=0.8.3=pyhd3eb1b0_0
   - pcre=8.45=hd77b12b_0
@@ -148,6 +155,7 @@ dependencies:
   - python-fastjsonschema=2.16.2=py38haa95532_0
   - python-json-logger=2.0.7=py38haa95532_0
   - python-tzdata=2023.3=pyhd3eb1b0_0
+  - python_abi=3.8=2_cp38
   - pytz=2023.3.post1=py38haa95532_0
   - pywin32=305=py38h2bbff1b_0
   - pywinpty=2.0.10=py38h5da7b33_0
@@ -169,6 +177,8 @@ dependencies:
   - six=1.16.0=pyhd3eb1b0_1
   - sniffio=1.2.0=py38haa95532_1
   - soupsieve=2.5=py38haa95532_0
+  - soxr=0.1.3=hcfcfb64_3
+  - soxr-python=0.3.7=py38he7056a7_0
   - sqlite=3.41.2=h2bbff1b_0
   - stack_data=0.2.0=pyhd3eb1b0_0
   - tbb=2021.8.0=h59b6b97_0
@@ -182,9 +192,11 @@ dependencies:
   - traitlets=5.7.1=py38haa95532_0
   - typing-extensions=4.7.1=py38haa95532_0
   - typing_extensions=4.7.1=py38haa95532_0
+  - ucrt=10.0.22621.0=h57928b3_0
   - urllib3=1.26.16=py38haa95532_0
   - vc=14.2=h21ff451_1
-  - vs2015_runtime=14.27.29016=h5e58377_2
+  - vc14_runtime=14.36.32532=hdcecf7f_17
+  - vs2015_runtime=14.36.32532=h05e6639_17
   - wcwidth=0.2.5=pyhd3eb1b0_0
   - webencodings=0.5.1=py38_1
   - websocket-client=0.58.0=py38haa95532_4
@@ -201,14 +213,38 @@ dependencies:
   - zlib=1.2.13=h8cc25b3_0
   - zstd=1.5.5=hd43e919_0
   - pip:
-      - audioread==3.0.1
+      - click==8.1.7
+      - dataclasses==0.6
+      - docutils==0.20.1
       - future==0.18.3
+      - ipython==7.34.0
+      - libfmp==1.2.5
       - librosa==0.8.1
+      - markdown-it-py==3.0.0
+      - mdurl==0.1.2
+      - midiutil==1.2.1
       - mido==1.3.0
+      - mido-fix==1.2.12
       - mir-eval==0.5
       - music21==5.7.2
+      - musicpy==6.89
       - nbstripout==0.3.9
+      - numba==0.58.1
+      - pandas==1.5.3
       - pretty-midi==0.2.10
+      - py==1.11.0
+      - pydub==0.25.1
+      - pygame==2.5.2
+      - pypianoroll==1.0.4
+      - pysoundfile==0.9.0.post1
+      - pytube==15.0.0
+      - regex==2023.10.3
       - resampy==0.2.2
-      - soundfile==0.9.0.post1
+      - rich==13.6.0
+      - rich-click==1.7.0
+      - sf2-loader==1.24
+      - sounddevice==0.4.6
+      - statistics==1.0.3.5
+      - synctoolbox==1.3.2
+      - tabulate==0.9.0
 prefix: C:\Users\nemec\miniconda3\envs\DP

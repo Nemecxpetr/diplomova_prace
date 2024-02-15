@@ -6,7 +6,8 @@ License:
 Some functions were taken from or inspired by the FMP Notebooks (https://www.audiolabs-erlangen.de/FMP) and libfmp.
 """
 
-from math import log10
+from math import e, log10
+from re import I
 from libfmp.b import plot_chromagram
 from matplotlib.figure import figaspect
 
@@ -19,7 +20,7 @@ import pandas as pd
 import libfmp
 from libfmp.c1.c1s2_symbolic_rep import visualize_piano_roll
 from libfmp.b.b_plot import plot_matrix 
-from Handler.MIDI_handler import df_to_list
+from Handler.MIDI_handler import df_to_list, load_midi
 
 import soundfile as sf
 
@@ -157,8 +158,8 @@ def visualize_piano_roll(score, xlabel='Time (seconds)', ylabel='Pitch', colors=
 
     return fig, ax
 
-def compare_midi(df_original : pd.DataFrame, 
-                 df_synced : pd.DataFrame, 
+def compare_midi(df_original : pd.DataFrame or str, 
+                 df_synced : pd.DataFrame or str, 
                  audio_chroma = None, 
                  audio_hop=None,
                  title_original_midi  : str = 'Original MIDI',
@@ -167,13 +168,20 @@ def compare_midi(df_original : pd.DataFrame,
 
     """Plot two piano-rolls together with the audio interpretation chroma
     Args:
-        df_original
-        df_synced
-        audio_chroma
+        df_original:  original midi data or string with path to them
+        df_synced:    synced midi data or string with path to them
+        audio_chroma (optional): audio chroma data to see what was the midi chromagram synced with
+        audio_chroma_settings:
     
     """
-    if audio_chroma is not None: rows = 3 
+    if audio_chroma is not None: 
+        assert audio_hop is not None
+        rows = 3 
     else: rows = 2 
+    
+    
+    if df_original is str:  df_original = load_midi(df_original)
+    if df_synced is str:    df_synced = load_midi(df_synced)
     
     fig, axs = plt.subplots(nrows=rows, ncols=1, figsize=(8,2.5*rows), sharex=True)
     

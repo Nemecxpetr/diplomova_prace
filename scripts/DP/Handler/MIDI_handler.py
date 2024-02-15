@@ -132,7 +132,7 @@ def load_midi(fn=os.path.join('..', '..', 'data', 'MIDI', 'test.mid')):
         Returns: 
             midi_data (pretty_midi.PrettyMIDI): loaded midi data
     
-        #TODO NOTE: this function is basically pointless so could be instead incorporated into other functions
+        #TODO NOTE: this function is basically pointless so could be instead incorporated into other functions??
             
     """    
     midi_data = pretty_midi.PrettyMIDI(fn)
@@ -344,7 +344,8 @@ def midi_to_csv(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
     Convert a midi file to a csv file and save it.
 
     Args:
-        midi_path:          path of the input .mid file or the data of midi file
+        midi:               path of the input .mid file 
+                            or the data of midi file
         csv_path:           path of the output .csv
         debug:              if True, additional info is printed
     """
@@ -395,65 +396,4 @@ def test(debug=False):
     
     __compare_midi(midi_to_csv(input_midi_path, csv_path=None, debug=debug), midi_to_csv(output_midi_path, csv_path=None, debug=debug), None)
     plt.show()
-
-    
-
-def test_drums():
-    path_drums = os.path.join('..', '..', 'data', 'MIDI', 'test_with_drums.mid')
-    midi_data = load_midi(path_drums)    
-
-    score = midi_to_list(midi_data)
-
-    path_csv = os.path.join('..', '..', 'data','CSV', 'test_with_drums.csv')
-    list_to_csv(score, path_csv)
-    
-    fig, ax = visualize_piano_roll(score, velocity_alpha=True)
-
-    path_midi= os.path.join('..', '..', 'data', 'MIDI', 'test_drums_new.mid')
-    midi_data_from_csv = csv_to_midi(path_csv, path_midi)
-
-    # using the variable ax for single a Axes
-
-    fig, ax = visualize_piano_roll(midi_to_list(midi_data_from_csv), velocity_alpha=True)
-    plt.show()
-
-def test_tempo():
-
-    md = load_midi(fn=os.path.join('..', '..', 'data', 'MIDI', 'test.mid'))
-    score = midi_to_list(md)
-    
-    path_csv = os.path.join('..', '..', 'data', 'CSV', 'test.csv')
-    csv = list_to_csv(score, path_csv)
-
-    path_midi = os.path.join('..', '..', 'data', 'MIDI','from_csv', 'test_tempo.mid')
-    new_midi = create_midi_from_csv_experimental(csv, path_midi)
-
-    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 8))
-    __visualize_piano_roll(midi_to_list(md), velocity_alpha=True, ax=ax[0])
-    ax[0].set(title='Original MIDI')
-    __visualize_piano_roll(midi_to_list(new_midi), velocity_alpha=True, ax=ax[1])
-    ax[1].set(title='MIDI from CSV')
-    fig.tight_layout()
-    
-
-    Y = pretty_midi.PrettyMIDI.get_chroma(md)
-
-    fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(8,5), sharex=False)
-    librosa.display.specshow(Y, x_axis='s', y_axis='chroma', cmap='gray_r', ax=axs[0])
-    axs[0].set(title='Original MIDI chroma')    
-    axs[0].set_xlabel('Time (seconds)')
-    axs[0].set_ylabel('Chroma')  
-    axs[0].label_outer()
-    
-
-    librosa.display.specshow(pretty_midi.PrettyMIDI.get_chroma(new_midi), x_axis='s', y_axis='chroma', cmap='gray_r', ax=axs[1])
-    axs[1].set(title='MIDI from CSV chroma')    
-    axs[1].set_xlabel('Time (seconds)')
-    axs[1].set_ylabel('Chroma')  
-    axs[1].label_outer()
-
-    fig.tight_layout()
-    
-    plt.show()
-
 

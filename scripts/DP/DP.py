@@ -5,41 +5,56 @@ Author: Bc. Petr Nemec
 Part of my master's thesis (https://github.com/Nemecxpetr/diplomova_prace)
 
 Aim of this script is providing help funcition for visualization of graphs etc. in the thesis
+
+Task:
+
 """
+from time import sleep
 import Handler as handle
 from Handler.visualizer import plot_signal_in_time, plot_spectrogram
 import librosa
 from libfmp.c1.c1s2_symbolic_rep import visualize_piano_roll
 from matplotlib import pyplot as plt
-from SYNC.DTW import dtw_test
+from SYNC.DTW import dtw_test, create_synced_object_from_MIDIfile
 
 import os
+import sf2_loader as sf
 
-# Fs = 48000
-# fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'test.wav')
-# x, Fs = librosa.load(fn_wav_x, sr=Fs, mono=True)
-#fig, ax = plot_signal_in_time(x=x, Fs=Fs)
-#plt.show()
+# What we try to achieve is a function synchronize_MIDI_with_audio()
+if __name__ == "__main__":
 
-#plot_spectrogram(x, Fs)
+    filenames = ['dtw_test', 'test']
+    debug = False # debuging argument passed to other functions 
+    verbose = False # argument passed to other functions for activating graph visualization of sync process
 
-# plot piano-roll 
-# fn_midi = os.path.join('..', '..', 'data', 'MIDI', 'test_100bpm.mid')
-# midi = handle.load_midi(fn_midi)
-# fig, ax = visualize_piano_roll(handle.midi_to_list(midi), velocity_alpha=True)
-# ax.set_title('Test 100 bmp')
-# plt.tight_layout()
-# plt.show()
+    for filename in filenames:
+        # 1. STEP - choose destinations for input and output MIDI and AUDIO data
+        
+        input_midi_path = f'../../data/input/MIDI/tests/{filename}.mid'
+        input_audio_path = f'../../data/iput/audio/{filename}.wav' #TODO: adapt to different audio formats?
+                                                                   #TODO: also make sure that the names are really the same
+        output_midi_path = f'../../data/output/{filename}.mid'
+        csv = f'../../data/csv/{filename}.csv'
+        
+        # 2. STEP - SYNCHRONIZE 
+        # TODO: padd input midi with some zero notes at beggining
+        handle.midi_to_csv(midi=input_midi_path, csv_path=csv, debug=debug)
+        synced_midi, audio_chroma = create_synced_object_from_MIDIfile(output_midi_path, input_audio_path, output_midi_path, csv, verbose)
 
-#handle.MIDI_handler.test()
+        # 3. STEP - is it working? VISUAL COMPARISON
+        # export it to chroma representation
+        handle.compare_midi(input_midi_path, output_midi_path, audio_chroma)
+        
 
-#dtw_test(show=False)
+# EXPERIMENTING with the musicpy and sound font loader
+# possible usage for later synthesis of sounds (comparing audio-to-audio with score-to-audio synth aproaches)
 
+# filename = "tests/test"
+# soundfont = "EX115"
 
-path_csv_100 = os.path.join('..', '..', 'data','CSV', 'test_100bpm.csv')
-path_csv_80 = os.path.join('..', '..', 'data','CSV', 'test_80bpm.csv')
+# # examples
+# loader = sf.sf2_loader(f'../../data/sf2/{soundfont}.sf2')
 
-df_80bpm = handle.MIDI_handler.read_csv(path_csv_80, separator=',')
-df_100bpm = handle.MIDI_handler.read_csv(path_csv_100, separator=',')
+# loader.play_midi_file(f'../../data/input/MIDI/{filename}.mid')
 
-handle.visualizer.compare_midi(df_80bpm, df_100bpm, title_original_midi='MIDI 80 BPM', title_new_midi='MIDI 100 BPM')
+# sleep(5)

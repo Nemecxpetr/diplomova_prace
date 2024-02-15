@@ -8,8 +8,14 @@ Cílem semestrálního projektu je popis principů hudební synchronizace, sesta
 
 Aim of this script is basic implementation of score-to-audio synchronization
 
+[1] NĚMEC, Petr. Score-to-audio synchronization of music interpretations [online]. 
+    Brno, 2024 [cit. 2024-03-01]. Available from: https://www.vut.cz/studenti/zav-prace/detail/159304. 
+    Master's Thesis. Vysoké učení technické v Brně, Fakulta elektrotechniky a komunikačních technologií, 
+    Department of Telecommunications. Supervisor Matěj Ištvánek.
 """
 import os
+from pathlib import Path
+import string
 import Handler as handle
 import librosa
 from matplotlib import pyplot as plt
@@ -21,6 +27,66 @@ from synctoolbox.feature.csv_tools import df_to_pitch_features
 from synctoolbox.feature.chroma import pitch_to_chroma
 
 
+def create_synced_object_from_MIDIfile(path_midi : string or Path, 
+                 path_audio : string or Path,
+                 path_output : string or Path, 
+                 path_csv : string or Path,
+                 verbose : bool = False):
+    """ Full synchronization pipeline as constructed in the master thesis. [1]
+    Args:
+        path_MIDI_data (string or Path) : path to the tempo stable MIDI file
+        path_audio (string or Path) : path to the audio file with the interpretation according to which the MIDI file should be aligned
+        path_output (string or Path) : path to the output file where the synced MIDI will be saved
+        path_CSV (string or Path) : path to the csv file # TODO delete and instead  of path make the function to handle only filenames
+        
+        TODO: make a better path handling instead of having whole path as the input change it only to the filename
+    Returns: 
+        synced_midi_df
+        audio_chroma
+        feature_rate
+    """
+   
+    # This settings showed to be crucial!!
+    Fs = 48000
+    N = 2048
+    H = N//2
+    # TODO: is this correct?
+    feature_rate = Fs/H
+
+    # Load audio
+    x_wav, Fs = librosa.load(path=path_audio, sr=Fs)
+    # export it to chroma representation
+    chroma_audio = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
+
+    # Load midi and export it to chroma representation
+    df_midi = handle.midi_to_csv(midi=path_midi, csv_path=path_csv)
+    f_pitch = df_to_pitch_features(df_midi, feature_rate=feature_rate)
+    f_chroma = pitch_to_chroma(f_pitch=f_pitch)
+    #f_chroma_quantized = quantize_chroma(f_chroma=f_chroma)
+    chroma_midi = f_chroma
+
+    # show the audio and midi chroma representations
+    if verbose:
+        fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10, 6), sharex=False)
+        img = librosa.display.specshow(chroma_audio, x_axis='frames', y_axis='chroma', cmap='gray_r', hop_length=H, ax=ax[0])
+        ax[0].set(title='Audio chroma representation')    
+        ax[0].set_xlabel('Time (frames)')
+        ax[0].set_ylabel('Chroma')  
+        ax[0].label_outer()
+
+        librosa.display.specshow(chroma_midi, x_axis='frames', y_axis='chroma', cmap='gray_r', ax=ax[1])
+        ax[1].set(title='MIDI chroma representation')
+        ax[1].set_xlabel('Time (frames)')
+        ax[1].set_ylabel('Chroma')
+        ax[0].label_outer()
+    
+        fig.colorbar(img, ax=ax)
+        plt.show()
+                
+    synced_midi = create_synced_object(df_midi, warping_path(chroma_audio, chroma_midi, feature_rate = feature_rate), feature_rate, path_output)
+        
+    return synced_midi, chroma_audio, feature_rate
+    
 def warping_path(X, Y, feature_rate=50, show=False):
     """ Computes warping path between two chromavectors
     Args:
@@ -84,13 +150,15 @@ def create_synced_object(df_original_midi_data, wp, feature_rate, path_midi, pat
     return df_warped
 
 def dtw_test(show=False):
+    """ Testing function for the DTW script 
+    """
     #test_audio, Fs = handle.read_audio(os.path.join('..', '..', 'data', 'audio', 'test.wav'))
     #handle.plot_signal_in_time(test_audio, Fs)
 
     # This settings showed to be crucial!!
     Fs = 48000
     N = 2048
-    H = N//16
+    H = N//2
     fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test.wav')
     # TODO: is this correct?
     feature_rate = Fs/H
@@ -101,7 +169,7 @@ def dtw_test(show=False):
     chroma_audio = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
 
     # Load midi and export it to chroma representation
-    path_midi =os.path.join('..', '..', 'data', 'MIDI', 'dtw_test.mid')
+    path_midi =os.path.join('..', '..', 'data', 'MIDI', 'tests', 'dtw_test.mid')
     path_csv = os.path.join('..', '..', 'data', 'CSV', 'dtw_test.csv')
     df_midi = handle.midi_to_csv(midi=path_midi, csv_path=path_csv)
     f_pitch = df_to_pitch_features(df_midi, feature_rate=feature_rate)
@@ -143,52 +211,18 @@ def dtw_test(show=False):
         fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test_whistle.wav')
         x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
         # export it to chroma
-        X_whistle = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
+        X_audio = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
         # compute optimal wp
-        wp_piano = warping_path(X_whistle, chroma_midi, feature_rate=feature_rate, show=show)
+        wp_piano = warping_path(X_audio, chroma_midi, feature_rate=feature_rate, show=show)
         # create synced object
         midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_whistle.mid')    
         csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_whistle.csv')    
         synced_midi=create_synced_object(df_midi, wp_piano, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
         # compare 
-        handle.compare_midi(df_midi, synced_midi, audio_chroma=chroma_audio, audio_hop=H)    
-
-        # Load different audio 
-        fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test_voice_eq.wav')
-        x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
-        # export it to chroma
-        X_whistle = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
-        # compute optimal wp
-        wp_voice = warping_path(X_whistle, chroma_midi,feature_rate=feature_rate, show=show)
-        midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_voice_eq.mid')    
-        csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_voice_eq.csv')    
-        # create synced object
-        synced_midi=create_synced_object(df_midi, wp_voice, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
-        # compare 
-        handle.compare_midi(df_midi, synced_midi, audio_chroma=chroma_audio, audio_hop=H)
-        
-        # Load different audio 
-        fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test_voice_slow.wav')
-        x_wav, Fs = librosa.load(fn_wav_x, sr=Fs)
-        # export it to chroma
-        X_whistle = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
-        # compute optimal wp
-        wp_voice = warping_path(X_whistle, chroma_midi,feature_rate=feature_rate, show=show)
-        midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'test_synced_with_slow_voice.mid')    
-        csv_path = os.path.join('..', '..', 'data', 'CSV', 'test_synced_with_slow_voice.csv')    
-        # create synced object
-        synced_midi=create_synced_object(df_midi, wp_voice, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
-        # compare 
-        handle.compare_midi(df_midi, synced_midi, audio_chroma=chroma_audio, audio_hop=H)
+        handle.compare_midi(df_midi, synced_midi, audio_chroma=X_audio, audio_hop=H)    
     
     
 
     # question how to adjust if more tones that originally start at the same time are now all different? How does the warping path reflect that?
     # Now that I think musically about it how would I even align that as a human listener? so I guess it doesn't really matter. If it picks the best match (The WP with least cost)
     # It should probably work
-
-
-# test that midi laoded and then saved back doesnť change the midi:
-#handle.MIDI_handler.test()
-# Note: it doesn't for the program but when you actually listen to the midi file it sounds different so that sucks
-
