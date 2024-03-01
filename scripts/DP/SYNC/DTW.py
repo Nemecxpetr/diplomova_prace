@@ -40,6 +40,7 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
         path_CSV (string or Path) : path to the csv file # TODO delete and instead  of path make the function to handle only filenames
         
         TODO: make a better path handling instead of having whole path as the input change it only to the filename
+
     Returns: 
         synced_midi_df
         audio_chroma
@@ -50,6 +51,7 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
     Fs = 48000
     N = 2048
     H = N//2
+
     # TODO: is this correct?
     feature_rate = Fs/H
 
@@ -82,11 +84,10 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
     
         fig.colorbar(img, ax=ax)
         plt.show()
-                
     synced_midi = create_synced_object(df_midi, warping_path(chroma_audio, chroma_midi, feature_rate = feature_rate), feature_rate, path_output)
         
     return synced_midi, chroma_audio, feature_rate
-    
+
 def warping_path(X, Y, feature_rate=50, show=False):
     """ Computes warping path between two chromavectors
     Args:
@@ -225,4 +226,6 @@ def dtw_test(show=False):
 
     # question how to adjust if more tones that originally start at the same time are now all different? How does the warping path reflect that?
     # Now that I think musically about it how would I even align that as a human listener? so I guess it doesn't really matter. If it picks the best match (The WP with least cost)
+
     # It should probably work
+

@@ -52,8 +52,8 @@ if __name__ == "__main__":
 # filename = "tests/test"
 # soundfont = "EX115"
 
-# # examples
-# loader = sf.sf2_loader(f'../../data/sf2/{soundfont}.sf2')
+path_csv_100 = os.path.join('..', '..', 'data','CSV', 'test_100bpm.csv')
+path_csv_80 = os.path.join('..', '..', 'data','CSV', 'test_80bpm.csv')
 
 # loader.play_midi_file(f'../../data/input/MIDI/{filename}.mid')
 
