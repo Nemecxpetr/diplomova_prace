@@ -60,7 +60,9 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
     chroma_audio = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
 
     # Load midi and export it to chroma representation
-    df_midi = append_with_zero_note_at_beggining( handle.midi_to_csv(midi=path_midi, csv_path=path_csv))
+    df_midi =  handle.midi_to_csv(midi=path_midi, csv_path=path_csv)
+    # Experimental - pad the midi df with shadow zero note at begining for better synch. performance
+    # df_midi = append_with_zero_note_at_beggining(df_midi)
     f_pitch = df_to_pitch_features(df_midi, feature_rate=feature_rate)
     f_chroma = pitch_to_chroma(f_pitch=f_pitch)
     #f_chroma_quantized = quantize_chroma(f_chroma=f_chroma)
@@ -90,10 +92,14 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
 
 def append_with_zero_note_at_beggining(df_midi):
     """ Add "shadow" note at the beginning for better performance
+    
+    NOTE: this aproach doesn't work yet
+    also would be nice if all the other notes would be shifted by some constant
+    TODO: reimplement maybe as a choosable parameter in the midi_to_list function itself or somewhere else
     """
     zero_note = [0, 0.1, 0.1, 69, 0, '', 0, 0]
   
-    df_midi.loc[len(df_midi.index)] = [0, 0.1, 0.1, 69, 0, '', 0, 0]
+    df_midi.loc[len(df_midi.index)] = [0, 0.1, 0.1, 69, 0, ' ', 0, 0]
 
     return df_midi
     

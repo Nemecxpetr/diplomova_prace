@@ -140,6 +140,7 @@ def load_midi(fn=os.path.join('..', '..', 'data', 'MIDI', 'test.mid')):
 
 def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
                  max_duration: int = 10,
+                 shadow_note: bool = False,
                  debug: bool = False) -> list:
     """
     Convert a midi file to a list of note events.
@@ -160,12 +161,18 @@ def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
         midi_data = midi
     else:
         raise RuntimeError('midi must be a path to a midi file or pretty_midi.PrettyMIDI')
-
-    score = []
+    
+    if shadow_note:
+        shadow = 0.5
+        zero_note = [0, shadow, shadow, 69, 0, ' ', 1, 1]
+        score = [zero_note,]
+    else:
+        score = [] 
+        
     midi_channel = 0
     previous_instr_program = ''
     offset = 0
-
+   
     for i, instrument in enumerate(midi_data.instruments):
         instr = regex.sub(r'[^\p{Latin} ]', u'', instrument.name)
         instr_program = instrument.program
@@ -174,9 +181,9 @@ def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
         # measure to be deleted or accesed by some print_thesis command or smth
         ndigits = 3
         for note in instrument.notes:
-            start = round(note.start, ndigits)
-            end = round(note.end, ndigits)
-            duration = round(note.end - start, ndigits)
+            start = round(note.start, ndigits) + shadow
+            end = round(note.end, ndigits) + shadow
+            duration = round(note.end - start,  ndigits) 
             if duration > max_duration:
                 print(f'Max duration: {duration}, skipping this note.')
                 continue
@@ -339,6 +346,7 @@ def create_midi_from_csv_experimental(path_output_file: str,
    
 def midi_to_csv(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
                 csv_path: str,
+                shadow_note: bool = True,
                 debug: bool = False):
     """
     Convert a midi file to a csv file and save it.
@@ -357,7 +365,7 @@ def midi_to_csv(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
     else:
         raise RuntimeError('midi must be a path to a midi file or pretty_midi.PrettyMIDI')
    
-    score = midi_to_list(midi_data, debug=debug)
+    score = midi_to_list(midi_data,shadow_note=shadow_note, debug=debug)
     final_df = pd.DataFrame(score, columns=['start', 'end', 'duration', 'pitch',
                                             'velocity', 'instrument', 'instr program', 'midi channel'])
     
