@@ -9,16 +9,11 @@ Aim of this script is providing help funcition for visualization of graphs etc. 
 Task:
 
 """
-from time import sleep
 import Handler as handle
-from Handler.visualizer import plot_signal_in_time, plot_spectrogram
-import librosa
-from libfmp.c1.c1s2_symbolic_rep import visualize_piano_roll
-from matplotlib import pyplot as plt
-from SYNC.DTW import dtw_test, create_synced_object_from_MIDIfile
+from SYNC.DTW import create_synced_object_from_MIDIfile
+from pathlib import Path
 
 import os
-import sf2_loader as sf
 
 # What we try to achieve is a function synchronize_MIDI_with_audio()
 if __name__ == "__main__":
@@ -31,7 +26,7 @@ if __name__ == "__main__":
         # 1. STEP - choose destinations for input and output MIDI and AUDIO data
         
         input_midi_path = f'../../data/input/MIDI/tests/{filename}.mid'
-        input_audio_path = f'../../data/iput/audio/{filename}.wav' #TODO: adapt to different audio formats?
+        input_audio_path = f'../../data/input/audio/{filename}.wav' #TODO: adapt to different audio formats?
                                                                    #TODO: also make sure that the names are really the same
         output_midi_path = f'../../data/output/{filename}.mid'
         csv = f'../../data/csv/{filename}.csv'
@@ -39,11 +34,12 @@ if __name__ == "__main__":
         # 2. STEP - SYNCHRONIZE 
         # TODO: padd input midi with some zero notes at beggining
         handle.midi_to_csv(midi=input_midi_path, csv_path=csv, debug=debug)
-        synced_midi, audio_chroma = create_synced_object_from_MIDIfile(output_midi_path, input_audio_path, output_midi_path, csv, verbose)
+        synced_midi, audio_chroma, audio_hop= create_synced_object_from_MIDIfile(input_midi_path, input_audio_path, output_midi_path, csv, verbose)
 
         # 3. STEP - is it working? VISUAL COMPARISON
         # export it to chroma representation
-        handle.compare_midi(input_midi_path, output_midi_path, audio_chroma)
+        Fs = 48000
+        handle.compare_midi( input_midi_path, output_midi_path, audio_chroma, audio_hop=audio_hop)
         
 
 # EXPERIMENTING with the musicpy and sound font loader

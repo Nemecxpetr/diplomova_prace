@@ -20,6 +20,7 @@ import Handler as handle
 import librosa
 from matplotlib import pyplot as plt
 import scipy
+import pandas as pd
 
 from synctoolbox.dtw.utils import make_path_strictly_monotonic
 from synctoolbox.dtw.mrmsdtw import sync_via_mrmsdtw
@@ -59,7 +60,7 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
     chroma_audio = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
 
     # Load midi and export it to chroma representation
-    df_midi = handle.midi_to_csv(midi=path_midi, csv_path=path_csv)
+    df_midi = append_with_zero_note_at_beggining( handle.midi_to_csv(midi=path_midi, csv_path=path_csv))
     f_pitch = df_to_pitch_features(df_midi, feature_rate=feature_rate)
     f_chroma = pitch_to_chroma(f_pitch=f_pitch)
     #f_chroma_quantized = quantize_chroma(f_chroma=f_chroma)
@@ -83,9 +84,18 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
         fig.colorbar(img, ax=ax)
         plt.show()
                 
-    synced_midi = create_synced_object(df_midi, warping_path(chroma_audio, chroma_midi, feature_rate = feature_rate), feature_rate, path_output)
+    synced_midi = create_synced_object(df_midi, warping_path(chroma_audio, chroma_midi, feature_rate = feature_rate), feature_rate, path_output,path_csv)
         
-    return synced_midi, chroma_audio, feature_rate
+    return synced_midi, chroma_audio, H
+
+def append_with_zero_note_at_beggining(df_midi):
+    """ Add "shadow" note at the beginning for better performance
+    """
+    zero_note = [0, 0.1, 0.1, 69, 0, '', 0, 0]
+  
+    df_midi.loc[len(df_midi.index)] = [0, 0.1, 0.1, 69, 0, '', 0, 0]
+
+    return df_midi
     
 def warping_path(X, Y, feature_rate=50, show=False):
     """ Computes warping path between two chromavectors

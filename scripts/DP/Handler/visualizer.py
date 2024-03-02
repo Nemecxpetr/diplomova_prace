@@ -20,7 +20,7 @@ import pandas as pd
 import libfmp
 from libfmp.c1.c1s2_symbolic_rep import visualize_piano_roll
 from libfmp.b.b_plot import plot_matrix 
-from Handler.MIDI_handler import df_to_list, load_midi
+from Handler.MIDI_handler import df_to_list, load_midi, midi_to_csv
 
 import soundfile as sf
 
@@ -175,13 +175,13 @@ def compare_midi(df_original : pd.DataFrame or str,
     
     """
     if audio_chroma is not None: 
-        assert audio_hop is not None
+        assert audio_hop is not None, "The hop size is not set"
         rows = 3 
     else: rows = 2 
     
     
-    if df_original is str:  df_original = load_midi(df_original)
-    if df_synced is str:    df_synced = load_midi(df_synced)
+    if isinstance(df_original, str):  df_original = midi_to_csv(df_original, None)
+    if isinstance(df_synced, str):    df_synced = midi_to_csv(df_synced, None)
     
     fig, axs = plt.subplots(nrows=rows, ncols=1, figsize=(8,2.5*rows), sharex=True)
     

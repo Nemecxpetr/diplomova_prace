@@ -227,11 +227,11 @@ def list_to_csv(note_list, fn_out=None):
   
     # NOTE: ideally, I would like to use float_format='%.3f', but then the numeric columns are considered as strings and,
     # therefore, are quoted
-    if fn_out is not None:  df.to_csv(fn_out, sep=';', index=False, quoting=2)
+    if fn_out is not None:  df.to_csv(fn_out, sep=',', index=False, quoting=2)
 
     return df
 
-def read_csv(fn : str or os.path, separator : str = ';', header=True, add_label=False):
+def read_csv(fn : str or os.path, separator : str = ',', header=True, add_label=False):
     """Read a CSV file in table format and creates a pd.DataFrame from it, with observations in the
     rows and variables in the columns.
 
