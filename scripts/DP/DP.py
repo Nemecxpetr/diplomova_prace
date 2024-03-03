@@ -50,16 +50,3 @@ if __name__ == "__main__":
         Fs = 48000
         handle.compare_midi( input_midi_path, output_midi_path, audio_chroma, audio_hop=audio_hop)
         
-
-# EXPERIMENTING with the musicpy and sound font loader
-# possible usage for later synthesis of sounds (comparing audio-to-audio with score-to-audio synth aproaches)
-
-# filename = "tests/test"
-# soundfont = "EX115"
-
-path_csv_100 = os.path.join('..', '..', 'data','CSV', 'test_100bpm.csv')
-path_csv_80 = os.path.join('..', '..', 'data','CSV', 'test_80bpm.csv')
-
-# loader.play_midi_file(f'../../data/input/MIDI/{filename}.mid')
-
-# sleep(5)
