@@ -16,6 +16,8 @@ Aim of this script is basic implementation of score-to-audio synchronization
 [2] MUELLER, Meinard and ZALKOW, Frank: FMP Notebooks: Educational Material for Teaching and Learning Fundamentals of Music Processing.
     Proceedings of the International Conference on Music Information Retrieval (ISMIR), Delft, The Netherlands, 2019.
 """
+from concurrent.futures import thread
+from functools import cached_property
 import os
 from pathlib import Path
 import string
@@ -72,12 +74,19 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
     x_wav, Fs = librosa.load(path=path_audio, sr=Fs)
     X_wav = librosa.stft(x_wav, n_fft = N, hop_length=H, window='hann')
     # Aproach 1. - Use CENS chroma vector
-    chroma_audio = librosa.feature.chroma_cens(y=x_wav, sr=Fs, C=X_wav, hop_length=H)
+    chroma_audio_cens = librosa.feature.chroma_cens(y=x_wav, sr=Fs, hop_length=H)
     #chroma_audio = librosa.feature.chroma_cqt(y=x_wav, sr=Fs, C=X_wav, hop_length=H)
+    chroma_audio_cqt = librosa.feature.chroma_cqt(y=x_wav, sr=Fs, hop_length=H, threshold=0.1)
 
     # Aproach 2. - first aply stft and separate harmonic and percussive elements and use harmonics to compute the spectrogram and percusives to compute transient curve
-    # X_harmonic, X_percussive = librosa.decompose.hpss(X_wav)
+    X_harmonic, X_percussive = librosa.decompose.hpss(X_wav)
     # TODO: ...
+    chroma_audio_harmonic = librosa.feature.chroma_stft(sr=Fs, S=X_harmonic, n_fft=N, hop_length=H)
+    
+    # DEBUG - try different chroma audio aproaches
+    # chroma_audio = chroma_audio_cens
+    chroma_audio = chroma_audio_cqt
+    # chroma_audio = chroma_audio_harmonic
 
 
     # Load midi and export it to chroma representation
@@ -88,7 +97,7 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
     f_chroma = pitch_to_chroma(f_pitch=f_pitch)
     #f_chroma_quantized = quantize_chroma(f_chroma=f_chroma)
     chroma_midi = f_chroma
-
+    
     # show the audio and midi chroma representations
     if verbose:
         fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10, 6), sharex=False)
