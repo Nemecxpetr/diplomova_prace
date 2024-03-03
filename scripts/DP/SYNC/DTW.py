@@ -33,21 +33,29 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
                  path_output : string or Path, 
                  path_csv : string or Path,
                  verbose : bool = False):
-    """ Full synchronization pipeline as constructed in the master thesis. [1]
+    """ Creates a synchronized MIDI file at specified location:
+    
+    Given path to: 
+                   1) audio interpratation recording file 
+                   2) MIDI score file
+    creates a NEW SYNCHRONIZED MIDI file, at given location.
+    
+    The synchronization is score-to-audio as described in the master thesis [1].
+   
+    Also a CSV file that acts as mid-level representation is stored at given location. 
+    
     Args:
         path_MIDI_data (string or Path) : path to the tempo stable MIDI file
         path_audio (string or Path) : path to the audio file with the interpretation according to which the MIDI file should be aligned
         path_output (string or Path) : path to the output file where the synced MIDI will be saved
         path_CSV (string or Path) : path to the csv file # TODO delete and instead  of path make the function to handle only filenames
-        
-        TODO: make a better path handling instead of having whole path as the input change it only to the filename
     Returns: 
-        synced_midi_df
-        audio_chroma
+        synced_midi_df (pd.DataFrame) : data frame of synchronized MIDI data
+        audio_chroma ()
         feature_rate
     """
    
-    # This settings showed to be crucial!!
+    # Time-frequency analysis parameters:
     Fs = 48000
     N = 2048
     H = N//2
