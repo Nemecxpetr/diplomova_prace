@@ -84,8 +84,8 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
     chroma_audio_harmonic = librosa.feature.chroma_stft(sr=Fs, S=X_harmonic, n_fft=N, hop_length=H)
     
     # DEBUG - try different chroma audio aproaches
-    # chroma_audio = chroma_audio_cens
-    chroma_audio = chroma_audio_cqt
+    chroma_audio = chroma_audio_cens
+    # chroma_audio = chroma_audio_cqt
     # chroma_audio = chroma_audio_harmonic
 
 
