@@ -12,15 +12,21 @@ Aim of this script is basic implementation of score-to-audio synchronization
     Brno, 2024 [cit. 2024-03-01]. Available from: https://www.vut.cz/studenti/zav-prace/detail/159304. 
     Master's Thesis. Vysoké učení technické v Brně, Fakulta elektrotechniky a komunikačních technologií, 
     Department of Telecommunications. Supervisor Matěj Ištvánek.
+    
+[2] MUELLER, Meinard and ZALKOW, Frank: FMP Notebooks: Educational Material for Teaching and Learning Fundamentals of Music Processing.
+    Proceedings of the International Conference on Music Information Retrieval (ISMIR), Delft, The Netherlands, 2019.
 """
 import os
 from pathlib import Path
 import string
+
+from numpy import lib
 import Handler as handle
 import librosa
 from matplotlib import pyplot as plt
 import scipy
 import pandas as pd
+import numpy as np
 
 from synctoolbox.dtw.utils import make_path_strictly_monotonic
 from synctoolbox.dtw.mrmsdtw import sync_via_mrmsdtw
@@ -64,8 +70,15 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
 
     # Load audio
     x_wav, Fs = librosa.load(path=path_audio, sr=Fs)
-    # export it to chroma representation
-    chroma_audio = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
+    X_wav = librosa.stft(x_wav, n_fft = N, hop_length=H, window='hann')
+    # Aproach 1. - Use CENS chroma vector
+    chroma_audio = librosa.feature.chroma_cens(y=x_wav, sr=Fs, C=X_wav, hop_length=H)
+    #chroma_audio = librosa.feature.chroma_cqt(y=x_wav, sr=Fs, C=X_wav, hop_length=H)
+
+    # Aproach 2. - first aply stft and separate harmonic and percussive elements and use harmonics to compute the spectrogram and percusives to compute transient curve
+    # X_harmonic, X_percussive = librosa.decompose.hpss(X_wav)
+    # TODO: ...
+
 
     # Load midi and export it to chroma representation
     df_midi =  handle.midi_to_csv(midi=path_midi, csv_path=path_csv)
@@ -98,18 +111,21 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
         
     return synced_midi, chroma_audio, H
 
-def append_with_zero_note_at_beggining(df_midi):
-    """ Add "shadow" note at the beginning for better performance
-    
-    NOTE: this aproach doesn't work yet
-    also would be nice if all the other notes would be shifted by some constant
-    TODO: reimplement maybe as a choosable parameter in the midi_to_list function itself or somewhere else
-    """
-    zero_note = [0, 0.1, 0.1, 69, 0, '', 0, 0]
-  
-    df_midi.loc[len(df_midi.index)] = [0, 0.1, 0.1, 69, 0, ' ', 0, 0]
 
-    return df_midi
+def log_compression(v, gamma=1.0):
+    """Logarithmically compresses a value or array
+
+    From [2]
+    Notebook: C3/C3S1_LogCompression.ipynb
+
+    Args:
+        v (float or np.ndarray): Value or array
+        gamma (float): Compression factor (Default value = 1.0)
+
+    Returns:
+        v_compressed (float or np.ndarray): Compressed value or array
+    """
+    return np.log(1 + gamma * v)
     
 def warping_path(X, Y, feature_rate=50, show=False):
     """ Computes warping path between two chromavectors

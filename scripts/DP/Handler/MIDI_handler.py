@@ -141,14 +141,18 @@ def load_midi(fn=os.path.join('..', '..', 'data', 'MIDI', 'test.mid')):
 def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
                  max_duration: int = 10,
                  shadow_note: bool = False,
-                 debug: bool = False) -> list:
+                 debug: bool = False,
+                 verbatim: bool = False) -> list:
     """
     Convert a midi file to a list of note events.
     Inspired by: Notebook: C1/C1S2_MIDI.ipynb from Meinard Müller
 
     Args:
         midi (str or pretty_midi.pretty_midi.PrettyMIDI):       path to a midi file or PrettyMIDI object
-        debug (bool):                                           if True, additional info is printed
+        max_duration (int = 10):                                maximum note duration (initial set to 10 seconds)
+        shadow_note (bool = False):                             if True, adds shadow note to the midi list
+        debug (bool = False):                                   if True, additional info is printed
+        verbatim (bool = False):                                if True, rounding for printing tables and other visualization in thesis is enabled 
 
     Returns:
         score (list):                                           a list of note events
@@ -162,13 +166,17 @@ def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
     else:
         raise RuntimeError('midi must be a path to a midi file or pretty_midi.PrettyMIDI')
     
+    # NOTE: for better performance there is zero velocity value note added to deal with the "border conditions" of the DTW algoritm
     if shadow_note:
-        shadow = 0.5
-        zero_note = [0, shadow, shadow, 69, 0, ' ', 1, 1]
+        shadow = 0.5 # length of the shadow note - seems to have some inpact on the performance
+                     # NOTE: maybe this could be estimated from the length of silence at the begining of the audio recording provided?
+        # the score structure: [ start,    end, duration, pitch, velocity,   instr, instr_program, midi_channel ]
+        zero_note =            [     0, shadow,   shadow,    69,        0,'shadow',             1,            1 ]
         score = [zero_note,]
     else:
         score = [] 
-        
+    
+    # Initialize midi parameters
     midi_channel = 0
     previous_instr_program = ''
     offset = 0
@@ -177,13 +185,18 @@ def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
         instr = regex.sub(r'[^\p{Latin} ]', u'', instrument.name)
         instr_program = instrument.program
 
-        #TODO NOTE: Adding round for visualisation in the thesis
+        #TODO NOTE: Adding round for printing table in the thesis (parameter verbatim)
         # measure to be deleted or accesed by some print_thesis command or smth
         ndigits = 3
         for note in instrument.notes:
-            start = round(note.start, ndigits) + shadow
-            end = round(note.end, ndigits) + shadow
-            duration = round(note.end - start,  ndigits) 
+            if verbatim:
+                start = round(note.start, ndigits) + shadow
+                end = round(note.end, ndigits) + shadow
+                duration = round(note.end - note.start,  ndigits) 
+            else:
+                start = note.start + shadow
+                end = note.end + shadow
+                duration = note.end - note.start
             if duration > max_duration:
                 print(f'Max duration: {duration}, skipping this note.')
                 continue
