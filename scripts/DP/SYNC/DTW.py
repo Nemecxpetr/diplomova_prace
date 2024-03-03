@@ -16,19 +16,14 @@ Aim of this script is basic implementation of score-to-audio synchronization
 [2] MUELLER, Meinard and ZALKOW, Frank: FMP Notebooks: Educational Material for Teaching and Learning Fundamentals of Music Processing.
     Proceedings of the International Conference on Music Information Retrieval (ISMIR), Delft, The Netherlands, 2019.
 """
-from codecs import xmlcharrefreplace_errors
-from concurrent.futures import thread
-from functools import cached_property
 import os
 from pathlib import Path
 import string
 
-from numpy import lib
 import Handler as handle
 import librosa
 from matplotlib import pyplot as plt
 import scipy
-import pandas as pd
 import numpy as np
 
 from synctoolbox.dtw.utils import make_path_strictly_monotonic
