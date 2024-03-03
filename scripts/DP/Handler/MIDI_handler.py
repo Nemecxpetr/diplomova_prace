@@ -162,13 +162,17 @@ def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
     else:
         raise RuntimeError('midi must be a path to a midi file or pretty_midi.PrettyMIDI')
     
+    # for better performance there is zero velocity value note added to deal with the "border conditions" of the DTW algoritm
     if shadow_note:
-        shadow = 0.5
-        zero_note = [0, shadow, shadow, 69, 0, ' ', 1, 1]
+        shadow = 0.5 # length of the shadow note - seems to have some inpact on the performance
+                     # NOTE: maybe this could be estimated from the length of silence at the begining of the audio recording provided?
+        # the score structure: [ start,    end, duration, pitch, velocity,   instr, instr_program, midi_channel ]
+        zero_note =            [     0, shadow,   shadow,    69,        0,'shadow',             1,            1 ]
         score = [zero_note,]
     else:
         score = [] 
-        
+    
+    # Initialize midi parameters
     midi_channel = 0
     previous_instr_program = ''
     offset = 0
