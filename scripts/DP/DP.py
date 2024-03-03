@@ -2,9 +2,8 @@
 Module: DP
 Author: Bc. Petr Nemec
 
-Part of my master's thesis (https://github.com/Nemecxpetr/diplomova_prace)
-
-Aim of this script is providing help funcition for visualization of graphs etc. in the thesis
+This script is realizing the testing and accesing of the pipeline functions of my master's thesis [1]
+(https://github.com/Nemecxpetr/diplomova_prace).
 
 Task:
 
