@@ -18,14 +18,13 @@ import os
 # What we try to achieve is a function synchronize_MIDI_with_audio()
 if __name__ == "__main__":
 
-    filenames = ['dtw_test', 'test']
+    filenames = ['dtw_test', 'dtw_test_whistle', 'dtw_test_voice_eq', 'dtw_test_voice_slow']
     debug = False # debuging argument passed to other functions 
     verbose = False # argument passed to other functions for activating graph visualization of sync process
 
     for filename in filenames:
-        # 1. STEP - choose destinations for input and output MIDI and AUDIO data
-        
-        input_midi_path = f'../../data/input/MIDI/tests/{filename}.mid'
+        # 1. STEP - choose destinations for input and output MIDI and AUDIO data        
+        input_midi_path = f'../../data/input/MIDI/tests/dtw_test.mid'
         input_audio_path = f'../../data/input/audio/{filename}.wav' #TODO: adapt to different audio formats?
                                                                    #TODO: also make sure that the names are really the same
         output_midi_path = f'../../data/output/{filename}.mid'
