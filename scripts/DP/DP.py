@@ -8,6 +8,16 @@ Aim of this script is providing help funcition for visualization of graphs etc. 
 
 Task:
 
+
+Reference:
+
+[1] NÌMEC, Petr. Score-to-audio synchronization of music interpretations [online]. 
+    Brno, 2024 [cit. 2024-03-01]. Available from: https://www.vut.cz/studenti/zav-prace/detail/159304. 
+    Master's Thesis. Vysoké uèení technické v Brnì, Fakulta elektrotechniky a komunikaèních technologií, 
+    Department of Telecommunications. Supervisor Matìj Ištvánek.
+    
+[2] MUELLER, Meinard and ZALKOW, Frank: FMP Notebooks: Educational Material for Teaching and Learning Fundamentals of Music Processing.
+    Proceedings of the International Conference on Music Information Retrieval (ISMIR), Delft, The Netherlands, 2019.
 """
 import Handler as handle
 from SYNC.DTW import create_synced_object_from_MIDIfile
