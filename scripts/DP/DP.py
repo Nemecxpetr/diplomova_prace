@@ -5,7 +5,7 @@ Author: Bc. Petr Nemec
 This script is realizing the testing and accesing of the pipeline functions of my master's thesis [1]
 (https://github.com/Nemecxpetr/diplomova_prace).
 
-Task:
+Task: 
 
 
 Reference:
