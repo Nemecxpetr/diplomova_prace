@@ -10,10 +10,10 @@ Task:
 
 Reference:
 
-[1] NÃMEC, Petr. Score-to-audio synchronization of music interpretations [online]. 
+[1] NƒöMEC, Petr. Score-to-audio synchronization of music interpretations [online]. 
     Brno, 2024 [cit. 2024-03-01]. Available from: https://www.vut.cz/studenti/zav-prace/detail/159304. 
-    Master's Thesis. VysokÈ uËenÌ technickÈ v BrnÏ, Fakulta elektrotechniky a komunikaËnÌch technologiÌ, 
-    Department of Telecommunications. Supervisor MatÏj Iötv·nek.
+    Master's Thesis. Vysok√© uƒçen√≠ technick√© v Brnƒõ, Fakulta elektrotechniky a komunikaƒçn√≠ch technologi√≠, 
+    Department of Telecommunications. Supervisor Matƒõj I≈°tv√°nek.
     
 [2] MUELLER, Meinard and ZALKOW, Frank: FMP Notebooks: Educational Material for Teaching and Learning Fundamentals of Music Processing.
     Proceedings of the International Conference on Music Information Retrieval (ISMIR), Delft, The Netherlands, 2019.
@@ -27,20 +27,20 @@ import os
 # What we try to achieve is a function synchronize_MIDI_with_audio()
 if __name__ == "__main__":
 
-    filenames = ['dtw_test', 'dtw_test_whistle', 'dtw_test_voice_eq', 'dtw_test_voice_slow']
+    filenames = ['getLucky']
     debug = False # debuging argument passed to other functions 
     verbose = False # argument passed to other functions for activating graph visualization of sync process
 
     for filename in filenames:
         # 1. STEP - choose destinations for input and output MIDI and AUDIO data        
-        input_midi_path = f'../../data/input/MIDI/tests/dtw_test.mid'
-        input_audio_path = f'../../data/input/audio/{filename}.wav' #TODO: adapt to different audio formats?
+        input_midi_path = f'../../data/input/MIDI/{filename}.mid'
+        input_audio_path = f'../../data/input/audio/{filename}.mp3' #TODO: adapt to different audio formats?
                                                                    #TODO: also make sure that the names are really the same
-        output_midi_path = f'../../data/output/{filename}.mid'
+        output_midi_path = f'../../data/output/s_{filename}.mid'
         csv = f'../../data/csv/{filename}.csv'
         
         # 2. STEP - SYNCHRONIZE 
-        # TODO: padd input midi with some zero notes at beggining
+        # TODO: padd input midi with some zero notes at beggining and at end
         handle.midi_to_csv(midi=input_midi_path, csv_path=csv, debug=debug)
         synced_midi, audio_chroma, audio_hop= create_synced_object_from_MIDIfile(input_midi_path, input_audio_path, output_midi_path, csv, verbose)
 
