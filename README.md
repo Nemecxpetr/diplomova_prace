@@ -16,6 +16,9 @@ Cílem **semestrálního projektu** je:
 -  sestavení datasetu
 -  základní implementace score-to-audio synchronizace.
  
-V budoucí diplomové práci budou implementovány skripty pro každou část synchronizačního procesu včetně výsledného testování přesnosti použitých metod a výsledek bude demonstrován na praktických ukázkách.
+Cílem **diplomové práce** je:
+- implementace skriptů pro každou část synchronizačního procesu
+- včetně výsledného testování přesnosti použitých metod
+- a výsledek bude demonstrován na praktických ukázkách.
 
 
