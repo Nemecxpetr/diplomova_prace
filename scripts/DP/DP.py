@@ -27,14 +27,14 @@ import os
 # What we try to achieve is a function synchronize_MIDI_with_audio()
 if __name__ == "__main__":
 
-    filenames = ['getLucky']
+    filenames = ['alb_se5', 'alb_se5_1', 'alb_se5_2', 'alb_se5_3']
     debug = False # debuging argument passed to other functions 
     verbose = False # argument passed to other functions for activating graph visualization of sync process
 
     for filename in filenames:
         # 1. STEP - choose destinations for input and output MIDI and AUDIO data        
-        input_midi_path = f'../../data/input/MIDI/{filename}.mid'
-        input_audio_path = f'../../data/input/audio/{filename}.mp3' #TODO: adapt to different audio formats?
+        input_midi_path = f'../../data/input/MIDI/{filenames[0]}.mid'
+        input_audio_path = f'../../data/input/audio/{filename}.opus' #TODO: adapt to different audio formats?
                                                                    #TODO: also make sure that the names are really the same
         output_midi_path = f'../../data/output/s_{filename}.mid'
         csv = f'../../data/csv/{filename}.csv'
