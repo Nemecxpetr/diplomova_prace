@@ -28,7 +28,9 @@ Prozatím hotovo:
     - v momentální fázi obsahuje části, které zkouší různé metody, především experimentujeme s různými způsoby tvorby chroma vektorů a parametrů při jejich tvorbě (velikost vzorkovacího okna, velikost skoku okna, formát chroma vektoru, apod. ...).
     - Pro zvýšení účinnosti skriptu je také experimentálně přidána funkce ghost note, která se snaží eliminovat nepřesnosti způsobené tichem/šumem na začátku a konci skladby v audio interpretaci
        - tato funkce je na několika místech celého projektu zdvojená a je potřeba ji sjednotit (při posledním pokusu o sjednocení se skript rozbil a momentálně je nefunkční).
--  
+  - implementace skriptu DP (prozatimní název "diplomová práce"), který celý proces realizuje v jedné funkci a testuje na základě adekvátních dat z datasetu.
+- částečně kompletní dataset
+  - potřeba vyčisti a rozšířit
 
 Potřeba dodělat:
 - vyčistit kód (sjednotit zdvojené funkce, vybrat jednotný přístup, nebo více parametrizovat různé varianty, odstarnit přebytečný kód, dopsat dokumentaci, ...)
