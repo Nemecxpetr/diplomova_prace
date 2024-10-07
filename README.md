@@ -31,10 +31,12 @@ Prozatím hotovo:
   - implementace skriptu DP (prozatimní název "diplomová práce"), který celý proces realizuje v jedné funkci a testuje na základě adekvátních dat z datasetu.
 - částečně kompletní dataset
   - potřeba vyčisti a rozšířit
+- česká verze teoretické části textu práce
 
 Potřeba dodělat:
 - vyčistit kód (sjednotit zdvojené funkce, vybrat jednotný přístup, nebo více parametrizovat různé varianty, odstarnit přebytečný kód, dopsat dokumentaci, ...)
 - otestovat na širším vzroku dat
-- 
+- vyhodnotit použité přístupy a jejich účinnost, atd.
+- dopsat text teoretické části a napsat text praktické části
 
 
