@@ -42,7 +42,7 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
     Given path to: 
                    1) audio interpratation recording file 
                    2) MIDI score file
-    creates a NEW SYNCHRONIZED MIDI file, at given location.
+    creates a NEW SYNCHRONIZED MIDI file, at given output location.
     
     The synchronization is score-to-audio as described in the master thesis [1].
    
@@ -69,8 +69,9 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
     # Load audio
     x_wav, Fs = librosa.load(path=path_audio, sr=Fs)
     X_wav = librosa.stft(x_wav, n_fft = N, hop_length=H, window='hann')
-    # Aproach 1. - Use CENS chroma vector
-    chroma_audio_cens = librosa.feature.chroma_cens(y=x_wav, sr=Fs, hop_length=H)
+    
+    # Different chroma vector approaches
+    #chroma_audio_cens = librosa.feature.chroma_cens(y=x_wav, sr=Fs, hop_length=H)
     #chroma_audio = librosa.feature.chroma_cqt(y=x_wav, sr=Fs, C=X_wav, hop_length=H)
     chroma_audio_cqt = librosa.feature.chroma_cqt(y=x_wav, sr=Fs, hop_length=H, threshold=0.1)
 
@@ -82,7 +83,7 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
                                                        aggregate=np.median,
                                                        metric='cosine'))
     chroma_smooth = scipy.ndimage.median_filter(chroma_filter, size=(1, 9))
-    
+   
     # DEBUG - try different chroma audio aproaches
     # chroma_audio = librosa.feature.chroma_stft(y=x_wav, sr=Fs, n_fft=N, hop_length=H)
     # chroma_audio = chroma_audio_cens # this one looks horrible but for some reason it seems to work quite well
@@ -93,8 +94,7 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
 
     # Load midi and export it to chroma representation
     df_midi =  handle.midi_to_csv(midi=path_midi, csv_path=path_csv)
-    # Experimental - pad the midi df with shadow zero note at begining for better synch. performance
-    # df_midi = append_with_zero_note_at_beggining(df_midi)
+    # Experimental - pad the midi df with shadow zero note at begining for better synch. performance - happens inside the df_to_list function from midi handler
     f_pitch = df_to_pitch_features(df_midi, feature_rate=feature_rate)
     f_chroma = pitch_to_chroma(f_pitch=f_pitch)
     #f_chroma_quantized = quantize_chroma(f_chroma=f_chroma)

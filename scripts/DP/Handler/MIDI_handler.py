@@ -227,7 +227,9 @@ def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
                 print(f'Instrument: {instr}, start: {start}, instr_program: {instr_program}, pitch: {pitch}, duration: {duration}, '
                       f'velocity: {velocity}, midi_channel: {midi_channel}')
             score.append([start, end, duration, pitch, velocity, instr, instr_program, midi_channel])
-    return score
+    
+    if shadow_note: return score.append(zero_note)
+    else: return score
 
 def list_to_csv(note_list, fn_out=None):
     """Write a list of note events (comprising a start time, duration, pitch, velocity, and label for each note event)
@@ -368,6 +370,7 @@ def midi_to_csv(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
         midi:               path of the input .mid file 
                             or the data of midi file
         csv_path:           path of the output .csv
+        shadow_note:        bool, if True midi list is padded with 'zero' note at begging and end
         debug:              if True, additional info is printed
     """
     
@@ -385,6 +388,7 @@ def midi_to_csv(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
     if csv_path is not None:    final_df.to_csv(csv_path, index=False)
     
     return final_df
+   
 
 # TODO: try different aproach with changing the original midi instead of creating a completely new midi from csv
 def midi_and_csv_to_midi(pm_original_midi, df_warped, fn_out):
