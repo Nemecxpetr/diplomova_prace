@@ -58,7 +58,8 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
         audio_chroma ()
         feature_rate
     """
-   
+    
+    ### Audio conversion parameters parameters
     # Time-frequency analysis parameters:
     Fs = 48000
     N = 2048*2
@@ -69,16 +70,18 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
     # Load audio
     x_wav, Fs = librosa.load(path=path_audio, sr=Fs)
     X_wav = librosa.stft(x_wav, n_fft = N, hop_length=H, window='hann')
-    
+      
     # Different chroma vector approaches
     #chroma_audio_cens = librosa.feature.chroma_cens(y=x_wav, sr=Fs, hop_length=H)
     #chroma_audio = librosa.feature.chroma_cqt(y=x_wav, sr=Fs, C=X_wav, hop_length=H)
     #chroma_audio_cqt = librosa.feature.chroma_cqt(y=x_wav, sr=Fs, hop_length=H, threshold=0.1)
 
     # Aproach 2. - first aply stft and separate harmonic and percussive elements and use harmonics to compute the spectrogram and percusives to compute transient curve
-    #
+    # Does it make sense though? because the exact number of notes is important for the sync and by separation there will be a difference in the files.
+    # More sense makes the novelty detection to improve time precision.
    
     # DEBUG - try different chroma audio aproaches
+    # TODO: make this selectable to be able to compare in the text
     chroma_audio = librosa.feature.chroma_stft(y=x_wav, sr=Fs, n_fft=N, hop_length=H)
     # chroma_audio = chroma_audio_cens # this one looks horrible but for some reason it seems to work quite well
     #chroma_audio = chroma_audio_cqt
@@ -94,9 +97,9 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
     #f_chroma_quantized = quantize_chroma(f_chroma=f_chroma)
     chroma_midi = f_chroma
     
-    # show the audio and midi chroma representations
+    # show the input audio and midi chroma representations
     if verbose:
-        fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10, 6), sharex=False)
+        fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10, 6), sharex=True)
         img = librosa.display.specshow(chroma_audio, x_axis='frames', y_axis='chroma', cmap='gray_r', hop_length=H, ax=ax[0])
         ax[0].set(title='Audio chroma representation')    
         ax[0].set_xlabel('Time (frames)')
@@ -204,7 +207,7 @@ def dtw_test(show=False):
     Fs = 48000
     N = 2048
     H = N//2
-    fn_wav_x = os.path.join('..', '..', 'data', 'audio', 'dtw_test.wav')
+    fn_wav_x = os.path.join('..', '..', 'data', 'input', 'audio','tests', 'dtw_test.wav')
     # TODO: is this correct?
     feature_rate = Fs/H
 
@@ -214,7 +217,7 @@ def dtw_test(show=False):
     chroma_audio = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
 
     # Load midi and export it to chroma representation
-    path_midi =os.path.join('..', '..', 'data', 'MIDI', 'tests', 'dtw_test.mid')
+    path_midi =os.path.join('..', '..', 'data', 'input', 'MIDI', 'tests', 'dtw_test.mid')
     path_csv = os.path.join('..', '..', 'data', 'CSV', 'dtw_test.csv')
     df_midi = handle.midi_to_csv(midi=path_midi, csv_path=path_csv)
     f_pitch = df_to_pitch_features(df_midi, feature_rate=feature_rate)
@@ -243,7 +246,7 @@ def dtw_test(show=False):
     # compute optimal warping path
     wp = warping_path(chroma_audio, chroma_midi, feature_rate=feature_rate, show=show)
     # create synchronized midi with the computed warping path
-    new_midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced.mid')    
+    new_midi_path = os.path.join('..', '..', 'data', 'output', 's_dtw_test.mid')    
     new_csv_path = os.path.join('..', '..', 'data', 'CSV',  'dtw_test_synced.csv')    
     synced_midi = create_synced_object(df_midi, wp, feature_rate=feature_rate, path_midi = new_midi_path, path_csv = new_csv_path)
     # Compare the original midi with the new midi and audio representation
@@ -260,8 +263,8 @@ def dtw_test(show=False):
         # compute optimal wp
         wp_piano = warping_path(X_audio, chroma_midi, feature_rate=feature_rate, show=show)
         # create synced object
-        midi_path = os.path.join('..', '..', 'data', 'MIDI', 'from_csv', 'dtw_test_synced_with_whistle.mid')    
-        csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced_with_whistle.csv')    
+        midi_path = os.path.join('..', '..', 'data', 's_dtw_test_synced.mid')    
+        csv_path = os.path.join('..', '..', 'data', 'CSV', 'dtw_test_synced.csv')    
         synced_midi=create_synced_object(df_midi, wp_piano, feature_rate=feature_rate, path_midi=midi_path, path_csv = csv_path )
         # compare 
         handle.compare_midi(df_midi, synced_midi, audio_chroma=X_audio, audio_hop=H)    
