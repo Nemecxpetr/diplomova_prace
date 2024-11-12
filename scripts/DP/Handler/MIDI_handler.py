@@ -228,8 +228,8 @@ def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
                       f'velocity: {velocity}, midi_channel: {midi_channel}')
             score.append([start, end, duration, pitch, velocity, instr, instr_program, midi_channel])
     
-    if shadow_note: return score.append(zero_note)
-    else: return score
+    if shadow_note: score.append(zero_note)
+    return score
 
 def list_to_csv(note_list, fn_out=None):
     """Write a list of note events (comprising a start time, duration, pitch, velocity, and label for each note event)

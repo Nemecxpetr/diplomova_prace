@@ -73,21 +73,15 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
     # Different chroma vector approaches
     #chroma_audio_cens = librosa.feature.chroma_cens(y=x_wav, sr=Fs, hop_length=H)
     #chroma_audio = librosa.feature.chroma_cqt(y=x_wav, sr=Fs, C=X_wav, hop_length=H)
-    chroma_audio_cqt = librosa.feature.chroma_cqt(y=x_wav, sr=Fs, hop_length=H, threshold=0.1)
+    #chroma_audio_cqt = librosa.feature.chroma_cqt(y=x_wav, sr=Fs, hop_length=H, threshold=0.1)
 
     # Aproach 2. - first aply stft and separate harmonic and percussive elements and use harmonics to compute the spectrogram and percusives to compute transient curve
-    y_harm = librosa.effects.harmonic(y=x_wav, margin=8)
-    chroma_harm = librosa.feature.chroma_cqt(y=y_harm, sr=Fs, hop_length=H)
-    chroma_filter = np.minimum(chroma_harm,
-                           librosa.decompose.nn_filter(chroma_harm,
-                                                       aggregate=np.median,
-                                                       metric='cosine'))
-    chroma_smooth = scipy.ndimage.median_filter(chroma_filter, size=(1, 9))
+    #
    
     # DEBUG - try different chroma audio aproaches
-    # chroma_audio = librosa.feature.chroma_stft(y=x_wav, sr=Fs, n_fft=N, hop_length=H)
+    chroma_audio = librosa.feature.chroma_stft(y=x_wav, sr=Fs, n_fft=N, hop_length=H)
     # chroma_audio = chroma_audio_cens # this one looks horrible but for some reason it seems to work quite well
-    chroma_audio = chroma_audio_cqt
+    #chroma_audio = chroma_audio_cqt
     # chroma_audio = chroma_audio_harmonic
     # chroma_audio = chroma_smooth
 

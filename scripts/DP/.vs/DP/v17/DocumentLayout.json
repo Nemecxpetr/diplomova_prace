@@ -1,27 +1,18 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\",
+  "WorkspaceRootPath": "E:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{EC057B25-A664-4B55-B81D-EE019BD3FFAA}|DP.pyproj|D:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\SYNC\\DTW.py||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{EC057B25-A664-4B55-B81D-EE019BD3FFAA}|DP.pyproj|solutionrelative:SYNC\\DTW.py||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{EC057B25-A664-4B55-B81D-EE019BD3FFAA}|DP.pyproj|D:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\DP.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "AbsoluteMoniker": "D:0:0:{EC057B25-A664-4B55-B81D-EE019BD3FFAA}|DP.pyproj|E:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\DP.py||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{EC057B25-A664-4B55-B81D-EE019BD3FFAA}|DP.pyproj|solutionrelative:DP.py||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{EC057B25-A664-4B55-B81D-EE019BD3FFAA}|DP.pyproj|D:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\Handler\\MIDI_handler.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "AbsoluteMoniker": "D:0:0:{EC057B25-A664-4B55-B81D-EE019BD3FFAA}|DP.pyproj|E:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\SYNC\\DTW.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{EC057B25-A664-4B55-B81D-EE019BD3FFAA}|DP.pyproj|solutionrelative:SYNC\\DTW.py||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EC057B25-A664-4B55-B81D-EE019BD3FFAA}|DP.pyproj|E:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\Handler\\MIDI_handler.py||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{EC057B25-A664-4B55-B81D-EE019BD3FFAA}|DP.pyproj|solutionrelative:Handler\\MIDI_handler.py||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Skola\\VUT\\DIPLOMKA\\Github\\data\\CSV\\getLucky.csv||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|c:\\Users\\nemec\\miniconda3\\envs\\DP\\Lib\\site-packages\\synctoolbox\\dtw\\mrmsdtw.py||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|c:\\Users\\nemec\\miniconda3\\envs\\DP\\Lib\\site-packages\\librosa\\core\\spectrum.py||{8B382828-6202-11D1-8870-0000F87579D2}"
     }
   ],
   "DocumentGroupContainers": [
@@ -31,8 +22,22 @@
       "DocumentGroups": [
         {
           "DockedWidth": 140,
-          "SelectedChildIndex": 16,
+          "SelectedChildIndex": 0,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "DP.py",
+              "DocumentMoniker": "E:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\DP.py",
+              "RelativeDocumentMoniker": "DP.py",
+              "ToolTip": "E:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\DP.py",
+              "RelativeToolTip": "DP.py",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAACYAAAAVAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2024-03-01T17:28:52.084Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
             {
               "$type": "Bookmark",
               "Name": "ST:128:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
@@ -79,72 +84,26 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "DP.py",
-              "DocumentMoniker": "D:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\DP.py",
-              "RelativeDocumentMoniker": "DP.py",
-              "ToolTip": "D:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\DP.py",
-              "RelativeToolTip": "DP.py",
-              "ViewState": "AQIAABIAAAAAAAAAAAAAACwAAAA/AAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
-              "WhenOpened": "2024-03-01T17:28:52.084Z",
-              "IsPinned": true,
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "getLucky.csv",
-              "DocumentMoniker": "D:\\Skola\\VUT\\DIPLOMKA\\Github\\data\\CSV\\getLucky.csv",
-              "RelativeDocumentMoniker": "..\\..\\data\\CSV\\getLucky.csv",
-              "ToolTip": "D:\\Skola\\VUT\\DIPLOMKA\\Github\\data\\CSV\\getLucky.csv",
-              "RelativeToolTip": "..\\..\\data\\CSV\\getLucky.csv",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002120|",
-              "WhenOpened": "2024-04-09T13:20:52.49Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "mrmsdtw.py",
-              "DocumentMoniker": "C:\\Users\\nemec\\miniconda3\\envs\\DP\\Lib\\site-packages\\synctoolbox\\dtw\\mrmsdtw.py",
-              "ToolTip": "C:\\Users\\nemec\\miniconda3\\envs\\DP\\Lib\\site-packages\\synctoolbox\\dtw\\mrmsdtw.py",
-              "ViewState": "AQIAANUAAAAAAAAAAAAAANkAAAAEAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
-              "WhenOpened": "2024-03-03T14:19:08.843Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "spectrum.py",
-              "DocumentMoniker": "C:\\Users\\nemec\\miniconda3\\envs\\DP\\Lib\\site-packages\\librosa\\core\\spectrum.py",
-              "ToolTip": "C:\\Users\\nemec\\miniconda3\\envs\\DP\\Lib\\site-packages\\librosa\\core\\spectrum.py",
-              "ViewState": "AQIAAJ8AAAAAAAAAAAAYwLAAAAAMAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
-              "WhenOpened": "2024-03-03T14:04:08.35Z"
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 2,
               "Title": "MIDI_handler.py",
-              "DocumentMoniker": "D:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\Handler\\MIDI_handler.py",
+              "DocumentMoniker": "E:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\Handler\\MIDI_handler.py",
               "RelativeDocumentMoniker": "Handler\\MIDI_handler.py",
-              "ToolTip": "D:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\Handler\\MIDI_handler.py",
+              "ToolTip": "E:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\Handler\\MIDI_handler.py",
               "RelativeToolTip": "Handler\\MIDI_handler.py",
-              "ViewState": "AQIAAOcAAAAAAAAAAAAIwH4BAAADAAAA",
+              "ViewState": "AQIAANkAAAAAAAAAAAAwwOYAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
               "WhenOpened": "2024-03-03T12:46:53.97Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "DTW.py",
-              "DocumentMoniker": "D:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\SYNC\\DTW.py",
+              "DocumentMoniker": "E:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\SYNC\\DTW.py",
               "RelativeDocumentMoniker": "SYNC\\DTW.py",
-              "ToolTip": "D:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\SYNC\\DTW.py",
+              "ToolTip": "E:\\Skola\\VUT\\DIPLOMKA\\Github\\scripts\\DP\\SYNC\\DTW.py",
               "RelativeToolTip": "SYNC\\DTW.py",
-              "ViewState": "AQIAAEwAAAAAAAAAAAAiwGEAAAA+AAAA",
+              "ViewState": "AQIAAEwAAAAAAAAAAAAwwFkAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
               "WhenOpened": "2024-03-03T12:37:29.236Z",
               "EditorCaption": ""

@@ -30,17 +30,19 @@ if __name__ == "__main__":
     # 1. choose the testfile names 
     #    # Naming convention in the dataset is that the first audio file has the same name as the midifile to be synced with.
     #    # The others are numbered
-    filenames = ['gymnopedie']
+    filenames = ['gymnopedie no1',
+                 'gymnopedie no1_3', 
+                 'gymnopedie no1_4']
     # NOTE: first we should test it on some short files to see if it actually works
     
   
     debug = False # debuging argument passed to other functions 
-    verbose = False # argument passed to other functions for activating graph visualization of sync process
+    verbose = True # argument passed to other functions for activating graph visualization of sync process
 
     for filename in filenames:
         # 1. STEP - choose destinations for input and output MIDI and AUDIO data        
-        input_midi_path = f'../../data/input/MIDI/{filenames[0]}.mid'
-        input_audio_path = f'../../data/input/audio/{filename}.m4a' #TODO: adapt to different audio formats?
+        input_midi_path = f'../../data/input/MIDI/gymnopedie/{filenames[0]}.mid'
+        input_audio_path = f'../../data/input/audio/gymnopedie/{filename}.wav' #TODO: adapt to different audio formats?
                                                                    #TODO: also make sure that the names are really the same
         output_midi_path = f'../../data/output/s_{filename}.mid'
         csv = f'../../data/csv/{filename}.csv'
