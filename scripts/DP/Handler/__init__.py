@@ -22,7 +22,7 @@ from .MIDI_handler import load_midi,\
     create_midi_from_csv_experimental, \
     midi_to_csv,\
     df_to_list,\
-    test
+    midi_test
 
 from .audio_handler import read_audio, \
     write_audio

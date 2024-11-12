@@ -7,6 +7,7 @@ Some functions were taken from or inspired by the FMP Notebooks (https://www.aud
 """
 
 from copy import deepcopy
+from fileinput import filename
 import os
 from tkinter import N
 import pandas as pd
@@ -139,7 +140,7 @@ def load_midi(fn=os.path.join('..', '..', 'data', 'MIDI', 'test.mid')):
     return midi_data
 
 def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
-                 max_duration: int = 10,
+                 max_duration: int = 20,
                  shadow_note: bool = False,
                  debug: bool = False,
                  verbatim: bool = False) -> list:
@@ -174,6 +175,7 @@ def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
         zero_note =            [     0, shadow,   shadow,    69,        0,'shadow',             1,            1 ]
         score = [zero_note,]
     else:
+        shadow = 0
         score = [] 
     
     # Initialize midi parameters
@@ -314,6 +316,19 @@ def create_midi_from_csv_experimental(path_output_file: str,
                                       csv: str or pd.DataFrame,
                                       bpm: int = 120,
                                       debug: bool = False):
+    """ Writes a MIDI file to specified location on disk from a csv or Panda data frame in a specific format.
+    Args:
+        path_output_file: str - path to write the MIDI file on disk
+        csv: str or pd.DataFrame - string with path to the csv file on disk or pd.DataFrame
+        bpm: int = 120 - bpm of the new midi file
+        debug: bool = False
+
+    Returns:
+        None
+    
+    The csv of pd.DataFrame format columns=['start', 'end', 'duration', 'pitch',
+                                            'velocity', 'instrument', 'instr program', 'midi channel']
+    """
     if isinstance(csv, str):
         df_csv = pd.read_csv(csv)
     elif isinstance(csv, pd.DataFrame):
@@ -328,10 +343,10 @@ def create_midi_from_csv_experimental(path_output_file: str,
 
     previous_track = None
     for i, row in df_csv.iterrows():
-
         channel = int(row['midi channel'])
         instr_program = int(row['instr program'])
         pitch = int(row['pitch'])
+        instr_name = str(row['instrument'])
 
         track = 0
         if track != previous_track:
@@ -353,6 +368,8 @@ def create_midi_from_csv_experimental(path_output_file: str,
         my_midi_file.addNote(track=track, channel=channel, time=convert_seconds_to_quarter(row['start'], bpm),
                              pitch=pitch, volume=int(row['velocity']),
                              duration=convert_seconds_to_quarter(row['duration'], bpm))
+        my_midi_file.addTrackName(track=track, time=convert_seconds_to_quarter(row['start'], bpm=bpm),
+                             trackName=instr_name)
         previous_channel = channel
 
     # create and save the midi file itself
@@ -372,6 +389,8 @@ def midi_to_csv(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
         csv_path:           path of the output .csv
         shadow_note:        bool, if True midi list is padded with 'zero' note at begging and end
         debug:              if True, additional info is printed
+        
+        data structure: columns=['start', 'end', 'duration', 'pitch', 'velocity', 'instrument', 'instr program', 'midi channel']
     """
     
     if isinstance(midi, str):
@@ -400,14 +419,15 @@ def midi_and_csv_to_midi(pm_original_midi, df_warped, fn_out):
     
 
 # Testing functions for optimizing the MIDI handler functions
-def test(debug=False):
-    input_midi_path = os.path.join('..', '..', 'data', 'MIDI', 'test_100bpm.mid')
+def midi_test(debug=False):
+    filename = 'odesza'
+    input_midi_path = f'../../data/input/MIDI/{filename}.mid'
+    path_csv = f'../../data/csv/{filename}.csv'
+    output_midi_path= f'../../data/output/s_{filename}.mid'
+    
     midi_data = load_midi(fn=input_midi_path)
-    path_csv = os.path.join('..', '..', 'data','CSV', 'test_100bpm.csv')
-
-    output_midi_path= os.path.join('..', '..', 'data', 'MIDI', 'from_csv','test.mid')
-
     df_new = midi_to_csv(midi=midi_data, csv_path=path_csv, debug=debug)
+    
     print('Original midi data - returned by function midi_to_list')
     print(tabulate(midi_to_list(midi_data), headers=['start', 'end', 'duration', 'pitch', 'velocity', 'instr', 'instr_program', 'midi_channel']))
     
