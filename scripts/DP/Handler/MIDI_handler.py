@@ -178,12 +178,10 @@ def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
                      # NOTE: maybe this could be estimated from the length of silence at the begining of the audio recording provided?
         
         # the score structure: [ start,    end, duration, pitch, velocity,   instr, instr_program, midi_channel ]
-        zero_note =            [     0, shadow,   shadow,    69,        0,'shadow',             0, 16 ]
-        score = [zero_note,]
+        zero_note =            [     0, shadow,   shadow,    69,        0,'shadow',             0, 15]
     else:
         shadow = 0
-        score = [] 
-    
+    score = []
 
    
     for i, instrument in enumerate(midi_data.instruments):
@@ -233,6 +231,7 @@ def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
                       f'velocity: {velocity}, midi_channel: {midi_channel}')
             score.append([start, end, duration, pitch, velocity, instr, instr_program, midi_channel])
     
+    # Duplicit code
     if shadow_note: score.append(zero_note)
     return score
 
@@ -331,6 +330,8 @@ def create_midi_from_csv_experimental(path_output_file: str,
     
     The csv of pd.DataFrame format columns=['start', 'end', 'duration', 'pitch',
                                             'velocity', 'instrument', 'instr program', 'midi channel']
+                                            
+    The way its now the shadow note created internaly does not get written to the file even if present in the data.                                       
     """
     if isinstance(csv, str):
         df_csv = pd.read_csv(csv)
@@ -346,6 +347,8 @@ def create_midi_from_csv_experimental(path_output_file: str,
 
     previous_track = None
     previous_instrument = None
+    track = 0
+    
     for i, row in df_csv.iterrows():
         channel = int(row['midi channel'])
         instr_program = int(row['instr program'])
@@ -353,30 +356,27 @@ def create_midi_from_csv_experimental(path_output_file: str,
         instr_name = str(row['instrument'])
         start_time = convert_seconds_to_quarter(row['start'], bpm)
         duration = convert_seconds_to_quarter(row['duration'], bpm)
-
-        track = 0
+                
         if track != previous_track:
             # Every track has own tempo
             my_midi_file.addTempo(track=track, time=0, tempo=bpm) 
+            # And name that is the name of the instrument it contains
             my_midi_file.addTrackName(track=track, time=0, trackName = instr_name)
             previous_instrument = instr_name
         previous_track = track
-        
+                
         #TODO: fix the naming
         if previous_instrument != instr_name:
             track += 1
-        previous_instrument = instr_name
-
+        previous_instrument = instr_name    
+        
         if i == 0:
             # at the begining of the cycle set the program change
             my_midi_file.addProgramChange(0, channel, 0, instr_program)
-            # and also name the track
-            my_midi_file.addTrackName(track=track, time=start_time, trackName=instr_name) 
         else:
             # then only everytime the channel changes do the program change 
             if previous_channel != channel:
                 my_midi_file.addProgramChange(0, channel, 0, instr_program)
-                my_midi_file.addTrackName(track=track,time=start_time, trackName=instr_name) 
 
         if debug:
             print(
@@ -387,8 +387,7 @@ def create_midi_from_csv_experimental(path_output_file: str,
         my_midi_file.addNote(track=track, channel=channel, time=start_time,
                              pitch=pitch, volume=int(row['velocity']),
                              duration=duration)
-        my_midi_file.addTrackName(track=track, time=0, trackName=instr_name) 
-          
+                  
         previous_channel = channel
 
     # create and save the midi file itself
