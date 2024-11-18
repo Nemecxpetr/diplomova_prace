@@ -167,21 +167,24 @@ def midi_to_list(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
     else:
         raise RuntimeError('midi must be a path to a midi file or pretty_midi.PrettyMIDI')
     
+    # Initialize midi parameters
+    midi_channel = 0
+    previous_instr_program = ''
+    offset = 0
+    
     # NOTE: for better performance there is zero velocity value note added to deal with the "border conditions" of the DTW algoritm
     if shadow_note:
         shadow = 0.5 # length of the shadow note - seems to have some inpact on the performance
                      # NOTE: maybe this could be estimated from the length of silence at the begining of the audio recording provided?
+        
         # the score structure: [ start,    end, duration, pitch, velocity,   instr, instr_program, midi_channel ]
-        zero_note =            [     0, shadow,   shadow,    69,        0,'shadow',             1,            1 ]
+        zero_note =            [     0, shadow,   shadow,    69,        0,'shadow',             0, 16 ]
         score = [zero_note,]
     else:
         shadow = 0
         score = [] 
     
-    # Initialize midi parameters
-    midi_channel = 0
-    previous_instr_program = ''
-    offset = 0
+
    
     for i, instrument in enumerate(midi_data.instruments):
         instr = regex.sub(r'[^\p{Latin} ]', u'', instrument.name)
@@ -342,34 +345,50 @@ def create_midi_from_csv_experimental(path_output_file: str,
         print(f'Unique instruments: {unique_instruments}')
 
     previous_track = None
+    previous_instrument = None
     for i, row in df_csv.iterrows():
         channel = int(row['midi channel'])
         instr_program = int(row['instr program'])
         pitch = int(row['pitch'])
         instr_name = str(row['instrument'])
+        start_time = convert_seconds_to_quarter(row['start'], bpm)
+        duration = convert_seconds_to_quarter(row['duration'], bpm)
 
         track = 0
         if track != previous_track:
-            my_midi_file.addTempo(track=track, time=0, tempo=bpm)
+            # Every track has own tempo
+            my_midi_file.addTempo(track=track, time=0, tempo=bpm) 
+            my_midi_file.addTrackName(track=track, time=0, trackName = instr_name)
+            previous_instrument = instr_name
         previous_track = track
+        
+        #TODO: fix the naming
+        if previous_instrument != instr_name:
+            track += 1
+        previous_instrument = instr_name
 
         if i == 0:
+            # at the begining of the cycle set the program change
             my_midi_file.addProgramChange(0, channel, 0, instr_program)
+            # and also name the track
+            my_midi_file.addTrackName(track=track, time=start_time, trackName=instr_name) 
         else:
+            # then only everytime the channel changes do the program change 
             if previous_channel != channel:
                 my_midi_file.addProgramChange(0, channel, 0, instr_program)
+                my_midi_file.addTrackName(track=track,time=start_time, trackName=instr_name) 
 
         if debug:
             print(
-                f"Note {pitch}, start at {convert_seconds_to_quarter(row['start'], bpm)} and duration "
-                f"{convert_seconds_to_quarter(row['duration'], bpm)}, bpm: {bpm}, volume: {row['velocity']}, "
+                f"Note {pitch}, start at {start_time} and duration "
+                f"{duration}, bpm: {bpm}, volume: {row['velocity']}, "
                 f"instr program: {instr_program}, channel: {channel}, track: {track}")
 
-        my_midi_file.addNote(track=track, channel=channel, time=convert_seconds_to_quarter(row['start'], bpm),
+        my_midi_file.addNote(track=track, channel=channel, time=start_time,
                              pitch=pitch, volume=int(row['velocity']),
-                             duration=convert_seconds_to_quarter(row['duration'], bpm))
-        my_midi_file.addTrackName(track=track, time=convert_seconds_to_quarter(row['start'], bpm=bpm),
-                             trackName=instr_name)
+                             duration=duration)
+        my_midi_file.addTrackName(track=track, time=0, trackName=instr_name) 
+          
         previous_channel = channel
 
     # create and save the midi file itself
@@ -426,19 +445,19 @@ def midi_test(debug=False):
     output_midi_path= f'../../data/output/s_{filename}.mid'
     
     midi_data = load_midi(fn=input_midi_path)
-    df_new = midi_to_csv(midi=midi_data, csv_path=path_csv, debug=debug)
+    df_new = midi_to_csv(midi=midi_data, csv_path=path_csv,shadow_note=True, debug=debug)
     
     print('Original midi data - returned by function midi_to_list')
-    print(tabulate(midi_to_list(midi_data), headers=['start', 'end', 'duration', 'pitch', 'velocity', 'instr', 'instr_program', 'midi_channel']))
+    print(tabulate(midi_to_list(midi_data, shadow_note=False), headers=['start', 'end', 'duration', 'pitch', 'velocity', 'instr', 'instr_program', 'midi_channel']))
     
     create_midi_from_csv_experimental(path_output_file=output_midi_path, csv=df_new, bpm=INITIAL_TEMPO, debug=debug)
     
     new_midi = load_midi(fn=output_midi_path)
     print('New midi data loaded from csv')
-    print(tabulate(midi_to_list(new_midi), headers=['start', 'end', 'duration', 'pitch', 'velocity', 'instr', 'instr_program', 'midi_channel']))   
+    print(tabulate(midi_to_list(new_midi, shadow_note=False), headers=['start', 'end', 'duration', 'pitch', 'velocity', 'instr', 'instr_program', 'midi_channel']))   
     print('')
     print('Note that the original and new data are not sorted the same way')
     
-    __compare_midi(midi_to_csv(input_midi_path, csv_path=None, debug=debug), midi_to_csv(output_midi_path, csv_path=None, debug=debug), None)
+    __compare_midi(midi_to_csv(input_midi_path, csv_path=None, shadow_note=False, debug=debug), midi_to_csv(output_midi_path, csv_path=None, shadow_note=False, debug=debug), None)
     plt.show()
 
