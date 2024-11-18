@@ -1,5 +1,5 @@
 start,end,duration,pitch,velocity,instrument,instr program,midi channel
-0.0,0.5,0.5,69,0,shadow,1,1
+0.0,0.5,0.5,69,0,shadow,0,16
 0.5,1.0,0.5,75,80,Voice,85,0
 1.0,1.5,0.5,73,80,Voice,85,0
 1.5,1.75,0.25,71,80,Voice,85,0
@@ -372,4 +372,4 @@ start,end,duration,pitch,velocity,instrument,instr program,midi channel
 32.25,32.5,0.25,42,80,Drumset,0,9
 32.5,32.75,0.25,36,80,Drumset,0,9
 32.5,32.75,0.25,49,80,Drumset,0,9
-0.0,0.5,0.5,69,0,shadow,1,1
+0.0,0.5,0.5,69,0,shadow,0,16
