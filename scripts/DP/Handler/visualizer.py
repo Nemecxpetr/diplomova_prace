@@ -216,5 +216,6 @@ def compare_midi(df_original : pd.DataFrame or str,
     fig.tight_layout()
     
     plt.show()
+
         
     return fig, axs

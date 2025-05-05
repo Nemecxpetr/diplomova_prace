@@ -437,8 +437,10 @@ def midi_and_csv_to_midi(pm_original_midi, df_warped, fn_out):
     
 
 # Testing functions for optimizing the MIDI handler functions
-def midi_test(debug=False):
-    filename = 'odesza'
+def midi_test(filename = 'odesza', debug=False):
+    """
+    Test the functionality of the MIDI handler pipeline
+    """
     input_midi_path = f'../../data/input/MIDI/{filename}.mid'
     path_csv = f'../../data/csv/{filename}.csv'
     output_midi_path= f'../../data/output/s_{filename}.mid'

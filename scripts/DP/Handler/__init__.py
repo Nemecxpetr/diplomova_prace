@@ -1,5 +1,4 @@
-﻿# Package Handler
-""" 
+﻿""" 
 Handler package
 
 Author: Petr Němec
