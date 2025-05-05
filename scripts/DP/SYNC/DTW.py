@@ -64,7 +64,6 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
     Fs = 48000
     N = 2048*2
     H = N//2
-    # TODO: is this correct?
     feature_rate = Fs/H
 
     # Load audio
