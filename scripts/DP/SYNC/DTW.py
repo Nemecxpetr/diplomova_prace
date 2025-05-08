@@ -118,7 +118,6 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
         
     return synced_midi, chroma_audio, H
 
-
 def log_compression(v, gamma=1.0):
     """Logarithmically compresses a value or array
 
@@ -196,7 +195,7 @@ def create_synced_object(df_original_midi_data, wp, feature_rate, path_midi, pat
     
     return df_warped
 
-def dtw_test(show=False):
+def dtw_test(filename='dtw_test', show=False):
     """ Testing function for the DTW script 
     """
     #test_audio, Fs = handle.read_audio(os.path.join('..', '..', 'data', 'audio', 'test.wav'))
@@ -206,7 +205,7 @@ def dtw_test(show=False):
     Fs = 48000
     N = 2048
     H = N//2
-    fn_wav_x = os.path.join('..', '..', 'data', 'input', 'audio','tests', 'dtw_test.wav')
+    fn_wav_x = os.path.join('..', '..', 'data', 'input', 'audio','tests', f'{filename}.wav')
     # TODO: is this correct?
     feature_rate = Fs/H
 
@@ -216,8 +215,8 @@ def dtw_test(show=False):
     chroma_audio = librosa.feature.chroma_stft(y=x_wav, sr=Fs, hop_length=H, n_fft=N)
 
     # Load midi and export it to chroma representation
-    path_midi =os.path.join('..', '..', 'data', 'input', 'MIDI', 'tests', 'dtw_test.mid')
-    path_csv = os.path.join('..', '..', 'data', 'CSV', 'dtw_test.csv')
+    path_midi =os.path.join('..', '..', 'data', 'input', 'MIDI', 'tests', f'{filename}.mid')
+    path_csv = os.path.join('..', '..', 'data', 'CSV', f'{filename}.csv')
     df_midi = handle.midi_to_csv(midi=path_midi, csv_path=path_csv)
     f_pitch = df_to_pitch_features(df_midi, feature_rate=feature_rate)
     f_chroma = pitch_to_chroma(f_pitch=f_pitch)
@@ -245,13 +244,13 @@ def dtw_test(show=False):
     # compute optimal warping path
     wp = warping_path(chroma_audio, chroma_midi, feature_rate=feature_rate, show=show)
     # create synchronized midi with the computed warping path
-    new_midi_path = os.path.join('..', '..', 'data', 'output', 's_dtw_test.mid')    
-    new_csv_path = os.path.join('..', '..', 'data', 'CSV',  'dtw_test_synced.csv')    
+    new_midi_path = os.path.join('..', '..', 'data', 'output', f's_{filename}.mid')    
+    new_csv_path = os.path.join('..', '..', 'data', 'CSV',  f'{filename}_synced.csv')    
     synced_midi = create_synced_object(df_midi, wp, feature_rate=feature_rate, path_midi = new_midi_path, path_csv = new_csv_path)
     # Compare the original midi with the new midi and audio representation
     handle.compare_midi(df_midi, synced_midi, audio_chroma=chroma_audio, audio_hop=H)
     
-    different_files= True
+    different_files= False
     if different_files:
         #TODO: create function doing this whole process:
         # Load different audio 
@@ -269,7 +268,6 @@ def dtw_test(show=False):
         handle.compare_midi(df_midi, synced_midi, audio_chroma=X_audio, audio_hop=H)    
     
     
-
     # question how to adjust if more tones that originally start at the same time are now all different? How does the warping path reflect that?
     # Now that I think musically about it how would I even align that as a human listener? so I guess it doesn't really matter. If it picks the best match (The WP with least cost)
     # It should probably work
