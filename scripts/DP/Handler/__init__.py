@@ -30,4 +30,5 @@ from .visualizer import plot_signal_in_time, \
     plot_spectrograph, \
     plot_spectrograph_phase, \
     compare_midi, \
-    plot_spectrogram
+    plot_spectrogram, \
+    print_spectrum_for_thesis

@@ -48,12 +48,34 @@ def plot_spectrograph(x, Fs):
     X = np.fft.rfft(x)
     f_fft = np.fft.rfftfreq(len(x), 1/Fs)
     plt.semilogx(f_fft, 20*np.log10(np.abs(X)))
-    plt.ylabel('Modul [dB]')
-    plt.xlabel('Frekvence [Hz]')
-    #plt.ylabel('Log amplitude [dB]')
-    #plt.xlabel('Frequency [Hz]')
+    #plt.ylabel('Modul [dB]')
+    #plt.xlabel('Frekvence [Hz]')
+    plt.ylabel('Log amplitude [dB]')
+    plt.xlabel('Frequency [Hz]')
     plt.xlim([20, Fs/2])
     plt.show()
+
+def print_spectrum_for_thesis(filename):
+    """PRINT SPECTRUM
+    Prints spectrum of an audio file four times with increasing length
+    Arg:
+        filename - name of the file in the dataset audio folder
+    """
+    input_audio_path = f'../../data/input/audio/{filename}.wav'
+    Fs = 48000
+    x, Fs = librosa.load(path=input_audio_path, sr=Fs)
+    
+    for i in range(4): 
+        win = int(len(x)/(4*i+1))
+        X = np.fft.rfft(x[0:win])
+        f_fft = np.fft.rfftfreq(win, 1/Fs)
+        plt.semilogx(f_fft, 20*np.log10(np.abs(X)), label=f'{round(win/len(x), 3)} part of signal', linestyle='-', linewidth=1.2)
+        plt.ylabel('Log amplitude [dB]')
+        plt.xlabel('Frequency [Hz]')
+        plt.xlim([20, Fs/2])
+        plt.ylim([0, 60])
+        plt.legend()
+        plt.show()
     
 def plot_spectrogram(x, Fs):
     """Visualize spektrogram
@@ -83,16 +105,16 @@ def plot_spectrograph_phase(x, Fs):
 
     fig, ax = plt.subplots(ncols=1, nrows=2, sharex=True)
     ax[0].semilogx(f_fft, X.real)
-    ax[0].set_ylabel('Realna slozka')
-    #plt.ylabel('Log amplitude [dB]')
-    #plt.xlabel('Frequency [Hz]')
+    ax[0].set_ylabel('Real part')
+    plt.ylabel('Log amplitude [dB]')
+    plt.xlabel('Frequency [Hz]')
 
 
     ax[1].semilogx(f_fft, X.imag)
-    plt.ylabel('Faze [deg]')
-    plt.xlabel('Frekvence [Hz]')
-    #plt.ylabel('Log amplitude [dB]')
-    #plt.xlabel('Frequency [Hz]')
+   # plt.ylabel('Faze [deg]')
+   # plt.xlabel('Frekvence [Hz]')
+    plt.ylabel('Log amplitude [dB]')
+    plt.xlabel('Frequency [Hz]')
     plt.xlim([20, Fs/2])
     plt.show()
     
