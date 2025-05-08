@@ -32,18 +32,17 @@ from IPython.display import Audio
 import librosa
 import os
 
-# What we try to achieve is a function synchronize_MIDI_with_audio()
-if __name__ == "__main__":
-
-    # 1. choose the testfile names 
-    #    # Naming convention in the dataset is that the first audio file has the same name as the midifile to be synced with.
-    #    # The others are numbered
-    filenames = ['unravel']
-    # NOTE: first we should test it on some short files to see if it actually works
-    
-  
-    debug = False # debuging argument passed to other functions 
-    verbose = True # argument passed to other functions for activating graph visualization of sync process
+def pipeline(filenames, debug, verbose):
+    """ MAIN PIPELINE
+    This is the function where the main pipeline is created as described in the thesis [1]
+        1. Load input files as sequences 𝑥, 𝑦 of some sort;
+        2. Convert the sequences 𝑋, 𝑌 to a common mid-representation format – chroma
+            features;
+        3. Compute the optimal warping path;
+        4. Extrapolate the obtained path and gain exact beginning and end times/tics
+            of musical elements in the original symbolic representation;
+        5. Change the times of the musical instances in a copy of the original symbolic
+            data and export the sequence as a new synchronized MIDI file.
     """
     for filename in filenames:
         # 1. STEP - choose destinations for input and output MIDI and AUDIO data        
@@ -79,8 +78,30 @@ if __name__ == "__main__":
 
         with open(output_audio_path, "wb") as f:
            f.write(audio.data)
-    """
+
+
+# What we try to achieve is a function synchronize_MIDI_with_audio()
+if __name__ == "__main__":
+
+    # 1. choose the testfile names 
+    #    # Naming convention in the dataset is that the first audio file has the same name 
+    #    as the midifile to be synced with.
+    #    # The others are numbered
+    filenames = ['unravel']
+    # NOTE: first we should test it on some short files to see if it actually works
     
-    #dtw_test(True)
-    midi_test(debug=True)
+  
+    debug = False # debuging argument passed to other functions 
+    verbose = True # argument passed to other functions for activating graph visualization of sync process
+    
+    pipeline(filenames, debug, verbose)
+        
+    #dtw_test(filenames[0], True)
+    #midi_test(debug=True)
+
+    #filename = 'tests/test'
+    #handle.visualizer.print_spectrum_for_thesis(filename)
+
+
+
     
