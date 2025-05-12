@@ -318,81 +318,69 @@ def create_midi_from_csv_experimental(path_output_file: str,
                                       csv: str or pd.DataFrame,
                                       bpm: int = 120,
                                       debug: bool = False):
-    """ Writes a MIDI file to specified location on disk from a csv or Panda data frame in a specific format.
-    Args:
-        path_output_file: str - path to write the MIDI file on disk
-        csv: str or pd.DataFrame - string with path to the csv file on disk or pd.DataFrame
-        bpm: int = 120 - bpm of the new midi file
-        debug: bool = False
-
-    Returns:
-        None
-    
-    The csv of pd.DataFrame format columns=['start', 'end', 'duration', 'pitch',
-                                            'velocity', 'instrument', 'instr program', 'midi channel']
-                                            
-    The way its now the shadow note created internaly does not get written to the file even if present in the data.                                       
     """
+    Writes a MIDI file from a CSV or DataFrame containing note events with timing and instrument info.
+    Automatically assigns each instrument to a dedicated track.
+
+    Args:
+        path_output_file: str - Path to save the resulting MIDI file.
+        csv: str or pd.DataFrame - Input data source.
+        bpm: int - Tempo of the MIDI file.
+        debug: bool - If True, prints debug information.
+    """
+    # Load data
     if isinstance(csv, str):
         df_csv = pd.read_csv(csv)
     elif isinstance(csv, pd.DataFrame):
         df_csv = csv
     else:
-        raise RuntimeError('csv must be a path to a csv file or pd.DataFrame')
-    
-    unique_instruments = df_csv['midi channel'].unique()
-    my_midi_file = MIDIFile(len(unique_instruments), adjust_origin=False)
+        raise RuntimeError('csv must be a path or pd.DataFrame')
 
-    if debug:
-        print(f'Unique instruments: {unique_instruments}')
+    # Create a unique track for each instrument
+    unique_instruments = df_csv['instrument'].unique()
+    instrument_to_track = {instr: i for i, instr in enumerate(unique_instruments)}
 
-    previous_track = None
-    previous_instrument = None
-    track = 0
-    
+    # Initialize MIDI file with number of tracks = number of instruments
+    my_midi_file = MIDIFile(numTracks=len(unique_instruments), adjust_origin=False)
+
+    # Store previous program change per channel to avoid redundant messages
+    channel_last_program = {}
+
+    # Set up tempo and track names
+    for instr, track_idx in instrument_to_track.items():
+        my_midi_file.addTrackName(track=track_idx, time=0, trackName=instr)
+        my_midi_file.addTempo(track=track_idx, time=0, tempo=bpm)
+
     for i, row in df_csv.iterrows():
-        channel = int(row['midi channel'])
-        instr_program = int(row['instr program'])
+        # Read note info
         pitch = int(row['pitch'])
-        instr_name = str(row['instrument'])
+        velocity = int(row['velocity'])
         start_time = convert_seconds_to_quarter(row['start'], bpm)
         duration = convert_seconds_to_quarter(row['duration'], bpm)
-                
-        if track != previous_track:
-            # Every track has own tempo
-            my_midi_file.addTempo(track=track, time=0, tempo=bpm) 
-            # And name that is the name of the instrument it contains
-            my_midi_file.addTrackName(track=track, time=0, trackName = instr_name)
-            previous_instrument = instr_name
-        previous_track = track
-                
-        #TODO: fix the naming
-        if previous_instrument != instr_name:
-            track += 1
-        previous_instrument = instr_name    
-        
-        if i == 0:
-            # at the begining of the cycle set the program change
-            my_midi_file.addProgramChange(0, channel, 0, instr_program)
-        else:
-            # then only everytime the channel changes do the program change 
-            if previous_channel != channel:
-                my_midi_file.addProgramChange(0, channel, 0, instr_program)
+        channel = int(row['midi channel'])
+        instr_name = str(row['instrument'])
+        instr_program = int(row['instr program'])
+        track = instrument_to_track[instr_name]
+
+        # Program change if needed
+        if channel not in channel_last_program or channel_last_program[channel] != instr_program:
+            my_midi_file.addProgramChange(track, channel, 0, instr_program)
+            channel_last_program[channel] = instr_program
 
         if debug:
-            print(
-                f"Note {pitch}, start at {start_time} and duration "
-                f"{duration}, bpm: {bpm}, volume: {row['velocity']}, "
-                f"instr program: {instr_program}, channel: {channel}, track: {track}")
+            print(f"Note {pitch}, start: {start_time:.2f}, duration: {duration:.2f}, "
+                  f"velocity: {velocity}, instrument: {instr_name}, program: {instr_program}, "
+                  f"channel: {channel}, track: {track}")
+
+        # Safeguard against out-of-range errors
+        if track >= my_midi_file.numTracks:
+            raise IndexError(f"Track index {track} exceeds number of initialized tracks")
 
         my_midi_file.addNote(track=track, channel=channel, time=start_time,
-                             pitch=pitch, volume=int(row['velocity']),
-                             duration=duration)
-                  
-        previous_channel = channel
+                             pitch=pitch, volume=velocity, duration=duration)
 
-    # create and save the midi file itself
-    with open(f'{path_output_file}', "wb") as output_file:
+    # Write to file
+    with open(path_output_file, "wb") as output_file:
         my_midi_file.writeFile(output_file)
    
 def midi_to_csv(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
