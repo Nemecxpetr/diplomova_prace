@@ -89,7 +89,7 @@ def create_synced_object_from_MIDIfile(path_midi : string or Path,
 
 
     # Load midi and export it to chroma representation
-    df_midi =  handle.midi_to_csv(midi=path_midi, csv_path=path_csv)
+    df_midi =  handle.midi_to_csv(midi=path_midi, csv_path=path_csv, debug=False)
     # Experimental - pad the midi df with shadow zero note at begining for better synch. performance - happens inside the df_to_list function from midi handler
     f_pitch = df_to_pitch_features(df_midi, feature_rate=feature_rate)
     f_chroma = pitch_to_chroma(f_pitch=f_pitch)

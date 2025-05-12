@@ -194,7 +194,9 @@ def compare_midi(df_original : pd.DataFrame or str,
         df_synced:    synced midi data or string with path to them
         audio_chroma (optional): audio chroma data to see what was the midi chromagram synced with
         audio_chroma_settings:
-    
+    Returns:
+        fig: 
+        axs: 
     """
     if audio_chroma is not None: 
         assert audio_hop is not None, "The hop size is not set"

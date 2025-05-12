@@ -14,6 +14,7 @@ Some functions were taken from or inspired by the FMP Notebooks (https://www.aud
 This package is part of my master's thesis (https://github.com/Nemecxpetr/diplomova_prace)
 """
 # MIDI handler functions to create midi and convert it to csv and back
+from numba.core.ir_utils import convert_code_obj_to_function
 from .MIDI_handler import load_midi,\
     midi_to_list, \
     list_to_csv, \
@@ -24,7 +25,8 @@ from .MIDI_handler import load_midi,\
     midi_test
 
 from .audio_handler import read_audio, \
-    write_audio
+    write_audio, \
+    convert_to_wav
 
 from .visualizer import plot_signal_in_time, \
     plot_spectrograph, \
