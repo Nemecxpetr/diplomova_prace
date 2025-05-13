@@ -191,7 +191,7 @@ def create_synced_object(df_original_midi_data, wp, feature_rate, path_midi, pat
     df_warped["duration"] = df_warped["end"] - df_warped["start"]
     
     handle.MIDI_handler.create_midi_from_csv_experimental(path_output_file=path_midi,csv=df_warped)
-    handle.MIDI_handler.midi_to_csv(path_midi, path_csv)
+    handle.MIDI_handler.midi_to_csv(path_midi, path_csv, max_duration = 100)
     
     return df_warped
 

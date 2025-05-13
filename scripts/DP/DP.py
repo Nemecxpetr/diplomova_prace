@@ -90,26 +90,57 @@ def pipeline(filenames, folder, debug, verbose):
         with open(output_audio_path, "wb") as f:
            f.write(audio.data)
 
-def dataset_preset(preset):
+def dataset_preset(preset, conv=False):
     """Choose filenames and folder presets for the dataset described in [1]
+    Args:   
+        preset (str): The name of the dataset preset to use.
+            # Dataset Presets:
+            #    #    preset = 'gymnopedie'
+            #    #    preset = 'unravel'
+            #    #    preset = 'albeniz'
+            #    #    preset = 'summertime'
+            #    #    preset = 'messiaen'
+        conv (bool): Whether to convert audio files to wav format.
+    Returns:
+        tuple: A tuple containing the folder name and a list of filenames.
     """
     if preset == 'gymnopedie':         
-            folder = 'gymnopedie'
-            filenames = ['gymnopedie no1_1', 'gymnopedie no1_2', 'gymnopedie no1 khatia']
+            #folder = 'gymnopedie'
+            #filenames = ['gymnopedie no1_1', 'gymnopedie no1_2', 'gymnopedie no1 khatia']
             # Convert audio files to wav format
-            for filename in filenames:
-                handle.audio_handler.convert_to_wav(f'../../data/input/audio/{folder}/{filename}.m4a', f'../../data/input/audio/{folder}/{filename}.wav', format='m4a')
+            #for filename in filenames:
+            #    handle.audio_handler.convert_to_wav(f'../../data/input/audio/{folder}/{filename}.m4a', f'../../data/input/audio/{folder}/{filename}.wav', format='m4a')
 
             folder = 'gymnopedie'
             filenames = ['gymnopedie no1', 'gymnopedie no1_1', 'gymnopedie no1_2', 'gymnopedie no1 khatia', 'gymnopedie no1_3', 'gymnopedie no1_4']       
     elif preset == 'unravel':
             folder = 'unravel'
             filenames = ['unravel']
+            conv_format = None
     elif preset ==  'albeniz':
             folder = 'albeniz'
             filenames = ['alb_se5', 'alb_se5_1', 'alb_se5_2', 'alb_se5_3']
-            for filename in filenames:
-                handle.audio_handler.convert_to_wav(f'../../data/input/audio/{folder}/{filename}.mp3', f'../../data/input/audio/{folder}/{filename}.wav', format='mp3')
+            conv_format = 'mp3'
+            # for filename in filenames:
+            #    handle.audio_handler.convert_to_wav(f'../../data/input/audio/{folder}/{filename}.mp3', f'../../data/input/audio/{folder}/{filename}.wav', format='mp3')
+    elif preset == 'summertime':
+        folder = 'summertime'
+        filenames = ['summertime','summertime_1', 'summertime_2']
+        conv_format = 'mp3'
+        #for filename in filenames:
+        #    handle.audio_handler.convert_to_wav(f'../../data/input/audio/{folder}/{filename}.mp3', f'../../data/input/audio/{folder}/{filename}.wav', format='mp3')
+    elif preset == 'messiaen':
+        folder = 'messiaen'
+        filenames = ['messiaen_le_banquet_celeste', 'messiaen_le_banquet_celeste_1', 'messiaen_le_banquet_celeste_2']
+        conv_format = 'm4a' 
+    else:
+        print('Unknown preset')
+        return None, None
+
+    if (conv_format is not None) & conv:
+        for filename in filenames:
+            handle.audio_handler.convert_to_wav(f'../../data/input/audio/{folder}/{filename}.{conv_format}', f'../../data/input/audio/{folder}/{filename}.wav', format=conv_format)
+  
     return folder, filenames
 
 # What we try to achieve is a function synchronize_MIDI_with_audio()
@@ -124,7 +155,9 @@ if __name__ == "__main__":
     #    #    preset = 'gymnopedie'
     #    #    preset = 'unravel'
     #    #    preset = 'albeniz'
-    folder, filenames = dataset_preset('albeniz')
+    #    #    preset = 'summertime'
+    #    #    preset = 'messiaen'
+    folder, filenames = dataset_preset('messiaen', True)
 
   
     debug = False # debuging argument passed to other functions 

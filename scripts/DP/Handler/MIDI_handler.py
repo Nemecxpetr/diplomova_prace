@@ -386,7 +386,8 @@ def create_midi_from_csv_experimental(path_output_file: str,
 def midi_to_csv(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
                 csv_path: str,
                 shadow_note: bool = True,
-                debug: bool = False):
+                debug: bool = False,
+                verbose: bool = False):
     """
     Convert a midi file to a csv file and save it.
 
@@ -407,7 +408,7 @@ def midi_to_csv(midi: str or pretty_midi.pretty_midi.PrettyMIDI,
     else:
         raise RuntimeError('midi must be a path to a midi file or pretty_midi.PrettyMIDI')
    
-    score = midi_to_list(midi_data,shadow_note=shadow_note, debug=debug, verbatim=True)
+    score = midi_to_list(midi_data,shadow_note=shadow_note, debug=debug, verbatim=verbose, max_duratioin = 100)
     final_df = pd.DataFrame(score, columns=['start', 'end', 'duration', 'pitch',
                                             'velocity', 'instrument', 'instr program', 'midi channel'])
     
