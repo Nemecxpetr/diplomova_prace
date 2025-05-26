@@ -1,3 +1,3 @@
-Piece,Version,DTW Distance,MAE,XCorr Score,XCorr Lag (ms),Peak Alignment Error,Beat Alighment Error
-Take 1,STFT,4.152,0.018,0.113,3157.914,2.494,0.618
-Take 1,CQT,1.889,0.016,0.102,-25123.991,2.403,0.595
+Piece,Version,DTW Deviation,MAE,XCorr Score,XCorr Lag (ms),PAE,BAE
+Take 1,STFT,1.228,0.11,0.187,92.88,0.581,0.618
+Take 1,CQT,1.403,0.228,0.44,46.44,0.411,0.595
