@@ -272,7 +272,7 @@ def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", norm
             "XCorr_Lag_(ms)",
             "Peak_Alignment_Error",
             "Beat_Alignment_Error"
-        ],
+        ]
 
     for metric in metrics:
         plt.figure(figsize=(8, 4))
@@ -302,6 +302,26 @@ def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", norm
         title_suffix = " (Normalized)" if normalize else ""
         plt.title(f"{metric.replace('_', ' ')}{title_suffix}")
         plt.ylabel("Normalized Score" if normalize else "Score")
+
+        if metric == "DTW_Distance":
+            ylabel = "Mean deviation from diagonal (seconds)"
+        elif metric == "Mean_Absolute_Error":
+            ylabel = "Mean Absolute Error (unitless)"
+        elif metric == "XCorr_Score":
+            ylabel = "Cross-Correlation (normalized)"
+        elif metric == "XCorr_Lag_(ms)":
+            ylabel = "Lag (milliseconds)"
+        elif metric == "Peak_Alignment_Error":
+            ylabel = "Peak Alignment Error (seconds)"
+        elif metric == "Beat_Alignment_Error":
+            ylabel = "Beat Alignment Error (seconds)"
+        elif normalize:
+            ylabel = "Normalized Score"
+        else:
+            ylabel = "Score"
+
+        plt.ylabel(ylabel)
+
         plt.grid(True, linestyle="--", alpha=0.6)
         plt.tight_layout()
 
@@ -336,7 +356,8 @@ if __name__ == "__main__":
                                                binarize=False,                                             
                                                downsample_factor=4,
                                                threshold=0.25,
-                                               skip_sonification=True)
+                                               skip_sonification=True,
+                                               debug=True)
 
     # Plot evaluation results
     plot_evaluation_results(

@@ -30,17 +30,20 @@ def pad_to_equal_length(a, b):
     b_padded = np.pad(b, (0, max_len - len(b)), mode='constant')
     return a_padded, b_padded
 
-def compute_novelty(audio_path, hop_length=512, feature_type='stft', threshold=0.4):
+def compute_novelty(audio_path, hop_length=512, feature_type='stft', threshold=0.2, smoothing=True, gamma=100.0):
     """
-    Computes a normalized spectral novelty function from an audio file.
+    Computes a normalized spectral novelty function from an audio file, with optional smoothing and log compression.
 
     Args:
         audio_path (str): Path to the input audio file.
-        hop_length (int): Hop length for STFT/CQT computation. Default is 512.
-        feature_type (str): Type of spectral representation ('stft' or 'cqt_1').
+        hop_length (int): Hop length for STFT/CQT computation.
+        feature_type (str): Type of spectral representation ('stft', 'cqt_1', etc.)
+        threshold (float): Threshold for sparsifying novelty values.
+        smoothing (bool): Whether to apply Gaussian smoothing to the novelty curve.
+        gamma (float): Compression factor for log compression.
 
     Returns:
-        tuple: (novelty, sample_rate, hop_length), where novelty is a 1D np.ndarray.
+        tuple: (novelty, sample_rate, hop_length)
     """
     y, sr = librosa.load(audio_path, sr=None)
     y, _ = librosa.effects.trim(y)
@@ -51,11 +54,20 @@ def compute_novelty(audio_path, hop_length=512, feature_type='stft', threshold=0
     else:
         S = np.abs(librosa.stft(y, hop_length=hop_length))
 
+    # Optional: log compression to emphasize low-energy onsets
+    S = np.log1p(gamma * S)
+
     novelty = librosa.onset.onset_strength(S=S, sr=sr, hop_length=hop_length)
+
+    # Optional smoothing (can help reduce jitter and misalignment)
+    if smoothing:
+        novelty = librosa.util.normalize(librosa.decompose.nn_filter(novelty[np.newaxis, :], aggregate=np.median)[0])
+
+    # Normalize
     novelty = (novelty - np.min(novelty)) / (np.max(novelty) - np.min(novelty) + 1e-8)
 
+    # Sparsify
     novelty = np.where(novelty > threshold, novelty, 0)
-    # QUICKER V.: novelty[novelty <= threshold] = 0
 
     return novelty.astype(np.float32), sr, hop_length
 
@@ -89,18 +101,16 @@ def dtw_score(nov1, nov2, band_width=100):
     D, wp = constrained_dtw(C=cost, global_constraints=True, band_rad=band_width)
     return D[-1, -1] / len(wp)
 
-def dtw_distance(nov1, nov2, hop_length, sr, band_width=100):
+def dtw_distance(nov1, nov2, hop_length, sr, band_width=100, debug=False):
     """
     Computes the normalized DTW distance and returns warping path.
     """
-    nov1, nov2 = pad_to_equal_length(nov1, nov2)
     cost = cdist(nov1[:, np.newaxis], nov2[:, np.newaxis], metric='euclidean')
     D, wp = constrained_dtw(C=cost, global_constraints=True, band_rad=band_width)
     
     dtw_score= D[-1, -1] / len(wp)
 
-    return dtw_diagonal_deviation(wp, hop_length, sr)
-    
+    return dtw_diagonal_deviation(wp, hop_length, sr), wp    
 
 def dtw_diagonal_deviation(wp, hop_length, sr):
     """
@@ -118,6 +128,36 @@ def dtw_diagonal_deviation(wp, hop_length, sr):
     time_diff = frame_diff * hop_length / sr
     return np.mean(time_diff)
 
+def plot_warping_path(wp, filename, preset, out_dir="../../data/eval/temp_eval", format="pdf"):
+    """
+    Plot and save a DTW warping path against the diagonal.
+
+    Args:
+        wp (np.ndarray): Warping path, shape (L, 2)
+        filename (str): Base name of the file (used in plot title and filename)
+        preset (str): Preset name to organize output
+        out_dir (str or Path): Base directory for saving the plot
+        format (str): File format (pdf, png, etc.)
+    """
+    wp = np.array(wp)
+    save_path = Path(out_dir) / "wp" / preset
+    save_path.mkdir(parents=True, exist_ok=True)
+
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.plot(wp[:, 1], wp[:, 0], linewidth=1, label="Warping Path")
+    ax.plot([0, max(wp[:, 1])], [0, max(wp[:, 0])], 'r--', label="Ideal Diagonal")
+    ax.set_xlabel("Synthesized MIDI (frames)")
+    ax.set_ylabel("Original Audio (frames)")
+    ax.set_title(f"Warping Path: {filename}")
+    ax.set_aspect('equal')
+    ax.grid(True)
+    ax.legend()
+
+    fig_path = save_path / f"{filename}_warping_path.{format}"
+    plt.savefig(fig_path)
+    plt.close(fig)
+
+    print(f"Warping path saved to: {fig_path}")
 
 def compute_mean_error(nov1, nov2):
     """
@@ -201,7 +241,6 @@ def peak_alignment_error(nov1, nov2, sr, hop_length, band_width=100):
     diffs = [abs(times1[i] - times2[j]) for i, j in wp]
     return np.mean(diffs)
 
-
 def beat_alignment_error(audio1, audio2, sr, hop_length):
     """
     Compares beat positions extracted from two audio signals and computes mean absolute error.
@@ -241,11 +280,8 @@ def beat_alignment_error(audio1, audio2, sr, hop_length):
     mean_error = np.mean(errors)
     return mean_error if mean_error < 5 else np.nan
 
-
-
 def downsample(novelty, factor):
     return novelty[::factor]
-
 
 def plot_novelties(nov_stft, nov_stft_midi, nov_cqt, nov_cqt_midi, hop, sr, out_path=None, show_plot=False):
     """
@@ -286,7 +322,6 @@ def plot_novelties(nov_stft, nov_stft_midi, nov_cqt, nov_cqt_midi, hop, sr, out_
     if show_plot:
         plt.show()
     plt.close(fig)
-
 
 def evaluate_dual_versions(original_audio_base,
                             midi_base_path,
@@ -378,7 +413,8 @@ def evaluate_all_versions_in_preset_folder(preset_name,
                                            downsample_factor=1,
                                            binarize=False,
                                            threshold=0.1,
-                                           skip_sonification=False):
+                                           skip_sonification=False,
+                                           debug=False):
     """
     Evaluates synchronization quality between original audio recordings and MIDI-based
     syntheses for all takes in a given preset folder.
@@ -477,12 +513,14 @@ def evaluate_all_versions_in_preset_folder(preset_name,
 
                 novelties[feature_type] = (nov1, nov2)
 
-                dtw_distance_sec = dtw_distance(nov1, nov2, hop, sr)
+                dtw_distance_sec, wp = dtw_distance(nov1, nov2, hop, sr)
                 mae_score = compute_mean_error(nov1, nov2)
                 xcorr_score, xcorr_lag = novelty_cross_correlation(nov1, nov2)
                 xcorr_lag_ms = 1000 * (xcorr_lag * effective_hop / sr)
                 peak_err = peak_alignment_error(nov1, nov2, sr=sr, hop_length=effective_hop)
                 beat_mae = beat_alignment_error(y_audio, y_midi, sr=sr, hop_length=effective_hop)
+
+                if debug: plot_warping_path(wp, raw_name, preset=preset_name, format="png")
 
                 rows.append({
                     "Piece": piece_name,
