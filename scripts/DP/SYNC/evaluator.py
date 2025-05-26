@@ -195,6 +195,7 @@ def novelty_cross_correlation(nov1, nov2):
     xcorr /= norm
     lags = np.arange(-len(x) + 1, len(x))
     peak_idx = np.argmax(xcorr)
+
     return xcorr[peak_idx], lags[peak_idx]
 
 def detect_peaks(novelty, pre_max=5, post_max=5, pre_avg=5, post_avg=5, delta=0.1, wait=10):

@@ -244,6 +244,21 @@ def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", norm
         return
 
     df_all = pd.concat(all_dfs, ignore_index=True)
+
+    # === FILTER OUTLIERS BASED ON METRIC THRESHOLDS ===
+    metric_thresholds = {
+        "DTW_Distance": 10.0,
+        "Mean_Absolute_Error": 1.0,
+        "XCorr_Score": 1.0,
+        "XCorr_Lag_(ms)": 500.0,
+        "Peak_Alignment_Error": 2.0,
+        "Beat_Alignment_Error": 2.0
+    }
+
+    for metric, max_val in metric_thresholds.items():
+        if metric in df_all.columns:
+            df_all = df_all[(df_all[metric] <= max_val) | (df_all[metric].isna())]  
+
     df_melted = df_all.melt(
         id_vars=["Preset", "Version"],
         value_vars=[
@@ -303,6 +318,7 @@ def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", norm
         plt.title(f"{metric.replace('_', ' ')}{title_suffix}")
         plt.ylabel("Normalized Score" if normalize else "Score")
 
+        # set correct ylabel based on metric
         if metric == "DTW_Distance":
             ylabel = "Mean deviation from diagonal (seconds)"
         elif metric == "Mean_Absolute_Error":
@@ -319,7 +335,6 @@ def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", norm
             ylabel = "Normalized Score"
         else:
             ylabel = "Score"
-
         plt.ylabel(ylabel)
 
         plt.grid(True, linestyle="--", alpha=0.6)
@@ -348,16 +363,16 @@ if __name__ == "__main__":
     # ultimate_test(feature_type='stft')
     # ultimate_test(feature_type='cqt_1')
     #
-    for preset in ['gymnopedie', 'unravel', 'albeniz', 'summertime', 'messiaen', 'test_2']:
-        evaluate_all_versions_in_preset_folder(preset_name=preset, 
-                                               soundfont='../../data/soundfonts/FluidR3_GM.sf2',
-                                               visualize=False,
-                                               feature_types=['stft', 'cqt_1'],
-                                               binarize=False,                                             
-                                               downsample_factor=4,
-                                               threshold=0.25,
-                                               skip_sonification=True,
-                                               debug=True)
+    # for preset in ['gymnopedie', 'unravel', 'albeniz', 'summertime', 'messiaen', 'test_2']:
+    #     evaluate_all_versions_in_preset_folder(preset_name=preset, 
+    #                                            soundfont='../../data/soundfonts/FluidR3_GM.sf2',
+    #                                            visualize=False,
+    #                                            feature_types=['stft', 'cqt_1'],
+    #                                            binarize=False,                                             
+    #                                            downsample_factor=4,
+    #                                            threshold=0.15,
+    #                                            skip_sonification=True,
+    #                                            debug=True)
 
     # Plot evaluation results
     plot_evaluation_results(
