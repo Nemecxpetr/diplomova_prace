@@ -178,6 +178,11 @@ def peak_alignment_error(nov1, nov2, sr, hop_length, band_width=100):
 def beat_alignment_error(audio1, audio2, sr, hop_length):
     """
     Compares beat positions extracted from two audio signals and computes mean absolute error.
+    mean_error = np.mean(errors)
+    if mean_error >= 10:
+        print(f"[Warning] Beat alignment error too high ({mean_error:.2f} s) — returning NaN")
+        return np.nan
+    return mean_error
 
     Args:
         audio1 (np.ndarray): First audio signal (e.g., original interpretation).
@@ -210,9 +215,6 @@ def beat_alignment_error(audio1, audio2, sr, hop_length):
     D, wp = constrained_dtw(C=cost, global_constraints=True, band_rad=100)
 
     errors = [abs(times1[i] - times2[j]) for i, j in wp]
-
-    mean_error = np.mean(errors)
-    return mean_error if mean_error < 5 else np.nan
 
 
 
@@ -335,7 +337,7 @@ def evaluate_dual_versions(original_audio_base,
             results.append(["error"] * 6)
             nov_pairs.append(([], []))
 
-    result_path = Path(f"../../data/eval/results/csv/{preset_name}_compare_stft_cqt.csv")
+    result_path = Path(f"../../data/eval/results/{preset_name}/{preset_name}_compare_stft_cqt.csv")
     with open(result_path, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(["Version", "DTW Score", "Mean Absolute Error", "XCorr Score", "XCorr Lag", "Peak Alignment Error", "Beat Allignement Error"])
@@ -477,7 +479,7 @@ def evaluate_all_versions_in_preset_folder(preset_name,
 
         # Save plot if both novelty pairs exist
         if "stft" in novelties and "cqt_1" in novelties:
-            fig_path = result_dir / "novelty" / f"{piece_name.replace(' ', '_')}_dual_novelty_plot.pdf"
+            fig_path = result_dir / f"{piece_name.replace(' ', '_')}_dual_novelty_plot.pdf"
             plot_novelties(
                 nov_stft=novelties["stft"][0],
                 nov_stft_midi=novelties["stft"][1],
