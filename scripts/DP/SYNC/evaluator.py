@@ -106,9 +106,9 @@ def dtw_distance(nov1, nov2, hop_length, sr, band_width=100, debug=False):
     Computes the normalized DTW distance and returns warping path.
     """
     cost = cdist(nov1[:, np.newaxis], nov2[:, np.newaxis], metric='euclidean')
-    D, wp = constrained_dtw(C=cost, global_constraints=True, band_rad=band_width)
+    _, wp = constrained_dtw(C=cost, global_constraints=True, band_rad=band_width)
     
-    dtw_score= D[-1, -1] / len(wp)
+    #dtw_score= D[-1, -1] / len(wp)
 
     return dtw_diagonal_deviation(wp, hop_length, sr), wp    
 
