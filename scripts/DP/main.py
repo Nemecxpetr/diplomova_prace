@@ -235,7 +235,7 @@ def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", norm
                 "XCorr Score": "XCorr_Score",
                 "XCorr Lag (ms)": "XCorr_Lag_(ms)",
                 "Peak Alignment Error": "Peak_Alignment_Error",
-                "Beat Alighment Error" : "Beat_Alignment_Error"
+                "Beat Alignment Error" : "Beat_Alignment_Error"
             })
             all_dfs.append(df)
 
@@ -265,7 +265,14 @@ def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", norm
 
     figure_dir = Path("../../data/eval/results/figures")
     figure_dir.mkdir(parents=True, exist_ok=True)
-    metrics = ["DTW_Score", "Mean_Absolute_Error", "XCorr_Score", "Peak_Alignment_Error", "BeatSync_MAE"]
+    metrics = [
+            "DTW_Distance",
+            "Mean_Absolute_Error",
+            "XCorr_Score",
+            "XCorr_Lag_(ms)",
+            "Peak_Alignment_Error",
+            "Beat_Alignment_Error"
+        ],
 
     for metric in metrics:
         plt.figure(figsize=(8, 4))

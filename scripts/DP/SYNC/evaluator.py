@@ -492,7 +492,7 @@ def evaluate_all_versions_in_preset_folder(preset_name,
                     "XCorr Score": round(xcorr_score, 3),
                     "XCorr Lag (ms)": round(xcorr_lag_ms, 3),
                     "Peak Alignment Error": round(peak_err, 3) if not np.isnan(peak_err) else "NaN",
-                    "Beat Alighment Error" :round(beat_mae, 3) if not np.isnan(beat_mae) else "NaN"
+                    "Beat Alignment Error" :round(beat_mae, 3) if not np.isnan(beat_mae) else "NaN"
                 })
             except Exception as e:
                 print(f"Error evaluating {piece_name} {feature_type}: {e}")
@@ -504,7 +504,7 @@ def evaluate_all_versions_in_preset_folder(preset_name,
                     "XCorr Score": "error",
                     "XCorr Lag (ms)": "error",
                     "Peak Alignment Error": "error",
-                    "Beat Alighment Error" : "error" 
+                    "Beat Alignment Error" : "error" 
                 })
 
         # Save plot if both novelty pairs exist
