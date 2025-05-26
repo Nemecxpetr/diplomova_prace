@@ -73,7 +73,7 @@ def binarize_novelty(novelty, threshold=0.1):
     novelty = (novelty - novelty.min()) / (novelty.max() - novelty.min() + 1e-8)
     return (novelty > threshold).astype(np.float32)
 
-def compare_novelty(nov1, nov2, band_width=100):
+def dtw_score(nov1, nov2, band_width=100):
     """
     Computes the normalized DTW distance between two novelty curves.
 
@@ -85,14 +85,43 @@ def compare_novelty(nov1, nov2, band_width=100):
     Returns:
         float: DTW distance normalized by warping path length.
     """
-    nov1, nov2 = pad_to_equal_length(nov1, nov2)
     cost = cdist(nov1[:, np.newaxis], nov2[:, np.newaxis], metric='euclidean')
     D, wp = constrained_dtw(C=cost, global_constraints=True, band_rad=band_width)
     return D[-1, -1] / len(wp)
 
+def dtw_distance(nov1, nov2, hop_length, sr, band_width=100):
+    """
+    Computes the normalized DTW distance and returns warping path.
+    """
+    nov1, nov2 = pad_to_equal_length(nov1, nov2)
+    cost = cdist(nov1[:, np.newaxis], nov2[:, np.newaxis], metric='euclidean')
+    D, wp = constrained_dtw(C=cost, global_constraints=True, band_rad=band_width)
+    
+    dtw_score= D[-1, -1] / len(wp)
+
+    return dtw_diagonal_deviation(wp, hop_length, sr)
+    
+
+def dtw_diagonal_deviation(wp, hop_length, sr):
+    """
+    Measures average deviation from diagonal of a warping path in seconds.
+
+    Args:
+        wp (np.ndarray): Warping path from DTW, shape (L, 2)
+        hop_length (int): Hop size in samples
+        sr (int): Sample rate
+
+    Returns:
+        float: Average deviation from diagonal in seconds
+    """
+    frame_diff = np.abs(wp[:, 0] - wp[:, 1])
+    time_diff = frame_diff * hop_length / sr
+    return np.mean(time_diff)
+
+
 def compute_mean_error(nov1, nov2):
     """
-    Computes the mean absolute error between two novelty functions.
+    Computes the mean absolute error (MAE) between two novelty functions.
 
     Args:
         nov1 (np.ndarray): First novelty function.
@@ -128,7 +157,6 @@ def novelty_cross_correlation(nov1, nov2):
     peak_idx = np.argmax(xcorr)
     return xcorr[peak_idx], lags[peak_idx]
 
-
 def detect_peaks(novelty, pre_max=5, post_max=5, pre_avg=5, post_avg=5, delta=0.1, wait=10):
     """
     Detects peaks in a novelty function using Librosa's peak-picking algorithm.
@@ -147,7 +175,6 @@ def detect_peaks(novelty, pre_max=5, post_max=5, pre_avg=5, post_avg=5, delta=0.
     """
     return librosa.util.peak_pick(x=novelty, pre_max=pre_max, post_max=post_max, pre_avg=pre_avg,
                                   post_avg=post_avg, delta=delta, wait=wait)
-
 
 def peak_alignment_error(nov1, nov2, sr, hop_length, band_width=100):
     """
@@ -268,7 +295,7 @@ def evaluate_dual_versions(original_audio_base,
                             visualize=False,
                             downsample_factor=1,
                             binarize=False):
-    """
+    """ DEPRECATED:
     Evaluates and compares synchronization quality of STFT- and CQT-based MIDI alignments
     for a single piece.
 
@@ -324,7 +351,7 @@ def evaluate_dual_versions(original_audio_base,
                 nov_orig = binarize_novelty(nov_orig)
                 nov_synth = binarize_novelty(nov_synth)
             results.append([
-                compare_novelty(nov_orig, nov_synth),
+                dtw_distance(nov_orig, nov_synth, hop, sr),
                 compute_mean_error(nov_orig, nov_synth),
                 *novelty_cross_correlation(nov_orig, nov_synth),
                 peak_alignment_error(nov_orig, nov_synth, sr=sr, hop_length=hop)])
@@ -387,13 +414,18 @@ def evaluate_all_versions_in_preset_folder(preset_name,
     """
 
     base_path = Path("../../data/input/audio") / preset_name
-    result_dir = Path(f"../../data/eval/results/{preset_name}")
+    result_dir = Path(f"../../data/eval/results")
     temp_dir = Path(f"../../data/eval/temp_eval/{preset_name}")
     result_dir.mkdir(parents=True, exist_ok=True)
     temp_dir.mkdir(parents=True, exist_ok=True)
-    csv_dir = Path("../../data/eval/results/csv")
+    
+    csv_dir = result_dir / "csv"
     csv_dir.mkdir(parents=True, exist_ok=True)
+
     result_file = csv_dir / f"{preset_name}_full_evaluation.csv"
+
+    plot_dir = result_dir / f"novelty/{preset_name}"
+    plot_dir.mkdir(parents=True, exist_ok=True)
 
     rows = []
     take_index = 1
@@ -445,7 +477,7 @@ def evaluate_all_versions_in_preset_folder(preset_name,
 
                 novelties[feature_type] = (nov1, nov2)
 
-                dtw_score = compare_novelty(nov1, nov2)
+                dtw_distance_sec = dtw_distance(nov1, nov2, hop, sr)
                 mae_score = compute_mean_error(nov1, nov2)
                 xcorr_score, xcorr_lag = novelty_cross_correlation(nov1, nov2)
                 xcorr_lag_ms = 1000 * (xcorr_lag * effective_hop / sr)
@@ -455,29 +487,29 @@ def evaluate_all_versions_in_preset_folder(preset_name,
                 rows.append({
                     "Piece": piece_name,
                     "Version": "STFT" if feature_type == "stft" else "CQT",
-                    "DTW Score": round(dtw_score, 3),
+                    "DTW Distance": round(dtw_distance_sec, 3),
                     "MAE": round(mae_score, 3),
                     "XCorr Score": round(xcorr_score, 3),
                     "XCorr Lag (ms)": round(xcorr_lag_ms, 3),
                     "Peak Alignment Error": round(peak_err, 3) if not np.isnan(peak_err) else "NaN",
-                    "BeatSync MAE" :round(beat_mae, 3) if not np.isnan(beat_mae) else "NaN"
+                    "Beat Alighment Error" :round(beat_mae, 3) if not np.isnan(beat_mae) else "NaN"
                 })
             except Exception as e:
                 print(f"Error evaluating {piece_name} {feature_type}: {e}")
                 rows.append({
                     "Piece": piece_name,
                     "Version": "STFT" if feature_type == "stft" else "CQT",
-                    "DTW Score": "error",
+                    "DTW Distance": "error",
                     "MAE": "error",
                     "XCorr Score": "error",
                     "XCorr Lag (ms)": "error",
                     "Peak Alignment Error": "error",
-                    "BeatSync MAE Error" : "error" 
+                    "Beat Alighment Error" : "error" 
                 })
 
         # Save plot if both novelty pairs exist
         if "stft" in novelties and "cqt_1" in novelties:
-            fig_path = result_dir / "novelty" / f"{piece_name.replace(' ', '_')}_dual_novelty_plot.pdf"
+            fig_path = plot_dir / f"{piece_name.replace(' ', '_')}_dual_novelty_plot.pdf"
             plot_novelties(
                 nov_stft=novelties["stft"][0],
                 nov_stft_midi=novelties["stft"][1],

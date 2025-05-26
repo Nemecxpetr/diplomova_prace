@@ -230,12 +230,12 @@ def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", norm
             df = pd.read_csv(path)
             df["Preset"] = preset
             df = df.rename(columns={
-                "DTW Score": "DTW_Score",
+                "DTW Distance": "DTW_Distance",
                 "MAE": "Mean_Absolute_Error",
                 "XCorr Score": "XCorr_Score",
-                "XCorr Lag": "XCorr_Lag",
+                "XCorr Lag (ms)": "XCorr_Lag_(ms)",
                 "Peak Alignment Error": "Peak_Alignment_Error",
-                "BeatSync MAE" : "BeatSync_MAE"
+                "Beat Alighment Error" : "Beat_Alignment_Error"
             })
             all_dfs.append(df)
 
@@ -246,7 +246,14 @@ def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", norm
     df_all = pd.concat(all_dfs, ignore_index=True)
     df_melted = df_all.melt(
         id_vars=["Preset", "Version"],
-        value_vars=["DTW_Score", "Mean_Absolute_Error", "XCorr_Score", "Peak_Alignment_Error", "BeatSync_MAE"],
+        value_vars=[
+            "DTW_Distance",
+            "Mean_Absolute_Error",
+            "XCorr_Score",
+            "XCorr_Lag_(ms)",
+            "Peak_Alignment_Error",
+            "Beat_Alignment_Error"
+        ],
         var_name="Metric",
         value_name="Score"
     )
