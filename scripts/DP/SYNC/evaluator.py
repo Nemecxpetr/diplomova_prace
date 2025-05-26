@@ -279,7 +279,7 @@ def beat_alignment_error(audio1, audio2, sr, hop_length):
     errors = [abs(times1[i] - times2[j]) for i, j in wp]
 
     mean_error = np.mean(errors)
-    return mean_error if mean_error < 5 else np.nan
+    return mean_error #if mean_error < 5 else np.nan
 
 def downsample(novelty, factor):
     return novelty[::factor]
@@ -526,24 +526,24 @@ def evaluate_all_versions_in_preset_folder(preset_name,
                 rows.append({
                     "Piece": piece_name,
                     "Version": "STFT" if feature_type == "stft" else "CQT",
-                    "DTW Distance": round(dtw_distance_sec, 3),
+                    "DTW Deviation": round(dtw_distance_sec, 3),
                     "MAE": round(mae_score, 3),
                     "XCorr Score": round(xcorr_score, 3),
                     "XCorr Lag (ms)": round(xcorr_lag_ms, 3),
-                    "Peak Alignment Error": round(peak_err, 3) if not np.isnan(peak_err) else "NaN",
-                    "Beat Alignment Error" :round(beat_mae, 3) if not np.isnan(beat_mae) else "NaN"
+                    "PAE": round(peak_err, 3) if not np.isnan(peak_err) else "NaN",
+                    "BAE" :round(beat_mae, 3) if not np.isnan(beat_mae) else "NaN"
                 })
             except Exception as e:
                 print(f"Error evaluating {piece_name} {feature_type}: {e}")
                 rows.append({
                     "Piece": piece_name,
                     "Version": "STFT" if feature_type == "stft" else "CQT",
-                    "DTW Distance": "error",
+                    "DTW Deviation": "error",
                     "MAE": "error",
                     "XCorr Score": "error",
                     "XCorr Lag (ms)": "error",
-                    "Peak Alignment Error": "error",
-                    "Beat Alignment Error" : "error" 
+                    "PAE": "error",
+                    "BAE" : "error" 
                 })
 
         # Save plot if both novelty pairs exist

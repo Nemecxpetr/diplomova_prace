@@ -230,12 +230,12 @@ def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", norm
             df = pd.read_csv(path)
             df["Preset"] = preset
             df = df.rename(columns={
-                "DTW Distance": "DTW_Distance",
+                "DTW Deviation": "DTW_Distance",
                 "MAE": "Mean_Absolute_Error",
                 "XCorr Score": "XCorr_Score",
                 "XCorr Lag (ms)": "XCorr_Lag_(ms)",
-                "Peak Alignment Error": "Peak_Alignment_Error",
-                "Beat Alignment Error" : "Beat_Alignment_Error"
+                "PAE": "Peak_Alignment_Error",
+                "BAE" : "Beat_Alignment_Error"
             })
             all_dfs.append(df)
 
@@ -249,15 +249,15 @@ def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", norm
     metric_thresholds = {
         "DTW_Distance": 10.0,
         "Mean_Absolute_Error": 1.0,
-        "XCorr_Score": 1.0,
-        "XCorr_Lag_(ms)": 500.0,
+        "XCorr_Score": 10.0,
+        "XCorr_Lag_(ms)": 10000.0,
         "Peak_Alignment_Error": 2.0,
         "Beat_Alignment_Error": 2.0
     }
 
     for metric, max_val in metric_thresholds.items():
         if metric in df_all.columns:
-            df_all = df_all[(df_all[metric] <= max_val) | (df_all[metric].isna())]  
+            df_all = df_all[(df_all[metric].abs() <= max_val) | (df_all[metric].isna())]  
 
     df_melted = df_all.melt(
         id_vars=["Preset", "Version"],
@@ -293,58 +293,56 @@ def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", norm
         plt.figure(figsize=(8, 4))
         subset = df_melted[df_melted["Metric"] == metric]
 
-        sns.boxplot(
-            data=subset,
-            x="Preset",
-            y="Score",
-            hue="Version",
-            palette="pastel",
-            dodge=True,
-            fliersize=0
-        )
-        sns.stripplot(
-            data=subset,
-            x="Preset",
-            y="Score",
-            hue="Version",
-            dodge=True,
-            marker="o",
-            alpha=0.6,
-            linewidth=0.5,
-            edgecolor="gray"
-        )
+        for i, limit in enumerate([None, 400 if metric == "XCorr_Lag_(ms)" else None]):
+            plt.figure(figsize=(8, 4))
+            sns.boxplot(
+                data=subset,
+                x="Preset",
+                y="Score",
+                hue="Version",
+                palette="pastel",
+                dodge=True,
+                fliersize=0
+            )
+            sns.stripplot(
+                data=subset,
+                x="Preset",
+                y="Score",
+                hue="Version",
+                dodge=True,
+                marker="o",
+                alpha=0.6,
+                linewidth=0.5,
+                edgecolor="gray"
+            )
 
-        title_suffix = " (Normalized)" if normalize else ""
-        plt.title(f"{metric.replace('_', ' ')}{title_suffix}")
-        plt.ylabel("Normalized Score" if normalize else "Score")
+            if limit:
+                plt.ylim(-limit, limit)
+                tick_spacing = 50  # every 50 ms
+                ticks = np.arange(-limit, limit + tick_spacing, tick_spacing)
+                plt.yticks(ticks)
+                filename_suffix = "_clipped"
+                title_suffix = f" (Zoomed < {limit}ms)"
+            else:
+                filename_suffix = ""
+                title_suffix = ""
 
-        # set correct ylabel based on metric
-        if metric == "DTW_Distance":
-            ylabel = "Mean deviation from diagonal (seconds)"
-        elif metric == "Mean_Absolute_Error":
-            ylabel = "Mean Absolute Error (unitless)"
-        elif metric == "XCorr_Score":
-            ylabel = "Cross-Correlation (normalized)"
-        elif metric == "XCorr_Lag_(ms)":
-            ylabel = "Lag (milliseconds)"
-        elif metric == "Peak_Alignment_Error":
-            ylabel = "Peak Alignment Error (seconds)"
-        elif metric == "Beat_Alignment_Error":
-            ylabel = "Beat Alignment Error (seconds)"
-        elif normalize:
-            ylabel = "Normalized Score"
-        else:
-            ylabel = "Score"
-        plt.ylabel(ylabel)
+            plt.title(f"{metric.replace('_', ' ')}{title_suffix}")
+            plt.ylabel("Score" if not normalize else "Normalized Score")
 
-        plt.grid(True, linestyle="--", alpha=0.6)
-        plt.tight_layout()
+            # Custom ylabel
+            if metric == "XCorr_Lag_(ms)":
+                plt.ylabel("Lag (milliseconds)")
 
-        figure_path = figure_dir / f"plot_points_line_{metric.lower()}.pdf"
-        plt.savefig(figure_path, format="pdf")
-        if visualize:
-            plt.show()
-        plt.close()
+            plt.grid(True, linestyle="--", alpha=0.6)
+            plt.tight_layout()
+
+            # Save with suffix if needed
+            figure_path = figure_dir / f"plot_points_line_{metric.lower()}{filename_suffix}.pdf"
+            plt.savefig(figure_path, format="pdf")
+            if visualize:
+                plt.show()
+            plt.close()
 
     print("Saved evaluation plots to:", figure_dir)
 
@@ -363,16 +361,16 @@ if __name__ == "__main__":
     # ultimate_test(feature_type='stft')
     # ultimate_test(feature_type='cqt_1')
     #
-    # for preset in ['gymnopedie', 'unravel', 'albeniz', 'summertime', 'messiaen', 'test_2']:
-    #     evaluate_all_versions_in_preset_folder(preset_name=preset, 
-    #                                            soundfont='../../data/soundfonts/FluidR3_GM.sf2',
-    #                                            visualize=False,
-    #                                            feature_types=['stft', 'cqt_1'],
-    #                                            binarize=False,                                             
-    #                                            downsample_factor=4,
-    #                                            threshold=0.15,
-    #                                            skip_sonification=True,
-    #                                            debug=True)
+    for preset in ['gymnopedie', 'unravel', 'albeniz', 'summertime', 'messiaen', 'test_2']:
+        evaluate_all_versions_in_preset_folder(preset_name=preset, 
+                                               soundfont='../../data/soundfonts/FluidR3_GM.sf2',
+                                               visualize=False,
+                                               feature_types=['stft', 'cqt_1'],
+                                               binarize=False,                                             
+                                               downsample_factor=4,
+                                               threshold=0.3,
+                                               skip_sonification=True,
+                                               debug=True)
 
     # Plot evaluation results
     plot_evaluation_results(
