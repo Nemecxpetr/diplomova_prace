@@ -1,3 +1,3 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:e3f4cc370f62a51ef5e32c47cdea7a9d41789d2d3c51371eb915554c7b5f093c
-size 191
+Piece,Version,DTW Score,MAE,XCorr Score,XCorr Lag (ms),Peak Alignment Error,BeatSync MAE
+Take 1,STFT,0.005,0.018,0.113,3157.914,2.494,0.618
+Take 1,CQT,0.003,0.016,0.102,-25123.991,2.403,0.595
