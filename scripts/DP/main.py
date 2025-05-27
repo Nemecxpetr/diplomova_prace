@@ -211,7 +211,7 @@ def ultimate_test(feature_type: str = 'stft', figure_format : str = 'pdf'):
             pipeline(filenames, folder, debug=False, feature_type=feature_type, verbose=False, figure_format = figure_format)
             print(f"Completed pipeline for '{preset}' using '{feature_type}' features.")
 
-def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", normalize=False, visualize=False):
+def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", normalize=False, visualize=False, apply_thresholds=True):
     """
     Load evaluation CSVs and plot evaluation metrics for a list of presets.
 
@@ -255,9 +255,11 @@ def plot_evaluation_results(presets, csv_dir="../../data/eval/results/csv", norm
         "Beat_Alignment_Error": 2.0
     }
 
-    for metric, max_val in metric_thresholds.items():
-        if metric in df_all.columns:
-            df_all = df_all[(df_all[metric].abs() <= max_val) | (df_all[metric].isna())]  
+    # Apply thresholds to filter out outliers
+    if apply_thresholds:    
+        for metric, max_val in metric_thresholds.items():
+            if metric in df_all.columns:
+                df_all = df_all[(df_all[metric].abs() <= max_val) | (df_all[metric].isna())]  
 
     df_melted = df_all.melt(
         id_vars=["Preset", "Version"],
@@ -360,23 +362,42 @@ if __name__ == "__main__":
     # 
     # ultimate_test(feature_type='stft')
     # ultimate_test(feature_type='cqt_1')
-    #
-    for preset in ['gymnopedie', 'unravel', 'albeniz', 'summertime', 'messiaen', 'test_2']:
-        evaluate_all_versions_in_preset_folder(preset_name=preset, 
-                                               soundfont='../../data/soundfonts/FluidR3_GM.sf2',
-                                               visualize=False,
-                                               feature_types=['stft', 'cqt_1'],
-                                               binarize=False,                                             
-                                               downsample_factor=4,
-                                               threshold=0.3,
-                                               skip_sonification=True,
-                                               debug=True)
+    # #
+    # for preset in ['gymnopedie', 'unravel', 'albeniz', 'summertime', 'messiaen', 'test_2']:
+    #     evaluate_all_versions_in_preset_folder(preset_name=preset, 
+    #                                            soundfont='../../data/soundfonts/FluidR3_GM.sf2',
+    #                                            visualize=False,
+    #                                            feature_types=['stft', 'cqt_1'],
+    #                                            binarize=False,                                             
+    #                                            downsample_factor=4,
+    #                                            threshold=0.3,
+    #                                            skip_sonification=True,
+    #                                            debug=True)
 
     # Plot evaluation results
-    plot_evaluation_results(
-        presets=['unravel', 'albeniz', 'summertime', 'messiaen', 'gymnopedie'],
-        csv_dir="../../data/eval/results/csv",
-        normalize=False,
-        visualize=False
-    )
+    # plot_evaluation_results(
+    #     presets=['unravel', 'albeniz', 'summertime', 'messiaen', 'gymnopedie'],
+    #     csv_dir="../../data/eval/results/csv",
+    #     normalize=False,
+    #     visualize=False,
+    #     apply_thresholds=False
+    # )
 
+    # visualize signal in time
+
+    x, sr = handle.audio_handler.read_audio('../../data/input/audio/tests/test.wav', mono=True)
+    # Compute STFT
+    N = 2048
+    H = N // 2
+    X = librosa.stft(x, n_fft=N, hop_length=H)
+    X_db = librosa.amplitude_to_db(abs(X))
+
+    # Create the plot
+    plt.figure(figsize=(5, 5))
+    librosa.display.specshow(X_db, sr=sr, hop_length=H, x_axis='time', y_axis='log', cmap='gray_r')
+    plt.colorbar(format='%+2.0f dB')
+    plt.title("Log-frequency Spectrogram")
+    plt.tight_layout()
+    plt.ylabel("Frequency (Hz)")
+    plt.xlabel("Time (s)")
+    plt.show()
