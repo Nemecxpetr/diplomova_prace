@@ -21,7 +21,7 @@ Cílem **diplomové práce** je:
 - včetně výsledného testování přesnosti použitých metod
 - a výsledek bude demonstrován na praktických ukázkách.
 
-Prozatím hotovo:
+Splněno:
 - implementace skriptů pro každou část synchronizačního procesu, ale kód je messy
   - implementace knihovny MIDI handler, která obsahuje funkce pro konverzi midi na csv, panda data frame a zpět, rovněž jako funkce umožnující tuto konverzi (přepočet tempových dat, apod. )
   - implementace knihovny DTW, která obsahuje funkce pro výpočet synchronizačních dat
@@ -32,11 +32,7 @@ Prozatím hotovo:
 - částečně kompletní dataset
   - potřeba vyčisti a rozšířit
 - česká verze teoretické části textu práce
-
-Potřeba dodělat:
-- vyčistit kód (sjednotit zdvojené funkce, vybrat jednotný přístup, nebo více parametrizovat různé varianty, odstarnit přebytečný kód, dopsat dokumentaci, ...)
-- otestovat na širším vzroku dat
-- vyhodnotit použité přístupy a jejich účinnost, atd.
-- dopsat text teoretické části a napsat text praktické části
+- otestováno na datasetu dostupném ve složce data/input
+- vyhodnoceny použité přístupy a jejich účinnost
 
 
