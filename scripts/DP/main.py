@@ -375,29 +375,29 @@ if __name__ == "__main__":
     #                                            debug=True)
 
     # Plot evaluation results
-    # plot_evaluation_results(
-    #     presets=['unravel', 'albeniz', 'summertime', 'messiaen', 'gymnopedie'],
-    #     csv_dir="../../data/eval/results/csv",
-    #     normalize=False,
-    #     visualize=False,
-    #     apply_thresholds=False
-    # )
+    plot_evaluation_results(
+        presets=['unravel', 'albeniz', 'summertime', 'messiaen', 'gymnopedie'],
+        csv_dir="../../data/eval/results/csv",
+        normalize=False,
+        visualize=False,
+        apply_thresholds=True
+    )
 
-    # visualize signal in time
+    # # visualize signal in time
 
-    x, sr = handle.audio_handler.read_audio('../../data/input/audio/tests/test.wav', mono=True)
-    # Compute STFT
-    N = 2048
-    H = N // 2
-    X = librosa.stft(x, n_fft=N, hop_length=H)
-    X_db = librosa.amplitude_to_db(abs(X))
+    # x, sr = handle.audio_handler.read_audio('../../data/input/audio/tests/test.wav', mono=True)
+    # # Compute STFT
+    # N = 2048
+    # H = N // 2
+    # X = librosa.stft(x, n_fft=N, hop_length=H)
+    # X_db = librosa.amplitude_to_db(abs(X))
 
-    # Create the plot
-    plt.figure(figsize=(5, 5))
-    librosa.display.specshow(X_db, sr=sr, hop_length=H, x_axis='time', y_axis='log', cmap='gray_r')
-    plt.colorbar(format='%+2.0f dB')
-    plt.title("Log-frequency Spectrogram")
-    plt.tight_layout()
-    plt.ylabel("Frequency (Hz)")
-    plt.xlabel("Time (s)")
-    plt.show()
+    # # Create the plot
+    # plt.figure(figsize=(5, 5))
+    # librosa.display.specshow(X_db, sr=sr, hop_length=H, x_axis='time', y_axis='log', cmap='gray_r')
+    # plt.colorbar(format='%+2.0f dB')
+    # plt.title("Log-frequency Spectrogram")
+    # plt.tight_layout()
+    # plt.ylabel("Frequency (Hz)")
+    # plt.xlabel("Time (s)")
+    # plt.show()
